@@ -16,12 +16,17 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Email service is not configured' });
   }
 
-  const recipients = Array.isArray(participants)
-    ? [...new Set(participants.filter((p) => p.email && p.email.includes('@')).map((p) => p.email))]
-    : [];
+  const allParticipants = Array.isArray(participants) ? participants : [];
+  console.log('[send-reminder] received', allParticipants.length, 'participants:', JSON.stringify(allParticipants));
+  const recipients = [...new Set(
+    allParticipants.filter((p) => p.email && p.email.includes('@')).map((p) => p.email)
+  )];
 
   if (recipients.length === 0) {
-    return res.status(400).json({ error: 'No participants with email addresses found' });
+    return res.status(400).json({
+      error: 'No participants with email addresses found',
+      debug: `Received ${allParticipants.length} participant(s), none had valid emails`,
+    });
   }
 
   const origin = baseUrl || 'https://vacation-scheduler.vercel.app';
