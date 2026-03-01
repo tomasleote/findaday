@@ -34,6 +34,8 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
     const unsubGroup = subscribeToGroup(groupId, (data) => {
       if (data) {
         setGroup(data);
+      } else {
+        setGroup(null);
       }
       onLoad();
     });

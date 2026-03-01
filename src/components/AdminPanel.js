@@ -89,6 +89,9 @@ function AdminPanel({ groupId, adminToken, onBack }) {
         if (data) {
           setGroup(data);
           setEditData(prev => Object.keys(prev).length === 0 ? data : prev);
+        } else {
+          setGroup(null);
+          setEditData({});
         }
         onLoad();
       });
@@ -175,10 +178,11 @@ function AdminPanel({ groupId, adminToken, onBack }) {
   const handleSaveEdit = async () => {
     try {
       const updates = { ...editData };
-      if (updates.newPassphrase) {
-        updates.recoveryPasswordHash = await hashPhrase(updates.newPassphrase.trim());
-        delete updates.newPassphrase;
+      const normalized = updates.newPassphrase?.trim();
+      if (normalized) {
+        updates.recoveryPasswordHash = await hashPhrase(normalized);
       }
+      delete updates.newPassphrase;
 
       await updateGroup(groupId, updates);
       setGroup({ ...group, ...updates });

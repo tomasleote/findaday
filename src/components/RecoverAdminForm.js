@@ -59,9 +59,10 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
             const body = { groupId: groupId.trim() };
 
             if (tab === 'passphrase') {
-                if (!passphrase) throw new Error('Please enter your recovery passphrase.');
+                const trimmedPassphrase = passphrase.trim();
+                if (!trimmedPassphrase) throw new Error('Please enter your recovery passphrase.');
                 // Hash client-side — passphrase never sent in plaintext
-                body.passphrase = await hashPhrase(passphrase);
+                body.passphrase = await hashPhrase(trimmedPassphrase);
             } else {
                 if (!email) throw new Error('Please enter your admin email address.');
                 body.email = email.trim().toLowerCase();

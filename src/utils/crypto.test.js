@@ -2,7 +2,7 @@
 const { webcrypto } = require('crypto');
 global.crypto = webcrypto;
 
-import { hashPhrase } from '../firebase';
+const { hashPhrase } = require('../firebase');
 
 describe('hashPhrase', () => {
     it('returns a 64-character lowercase hex string (SHA-256)', async () => {
