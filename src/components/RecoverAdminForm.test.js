@@ -30,6 +30,13 @@ describe('RecoverAdminForm', () => {
         expect(screen.queryByPlaceholderText(/set at creation/i)).not.toBeInTheDocument();
     });
 
+    it('switches to find groups tab and shows find email input', async () => {
+        render(<RecoverAdminForm onSuccess={jest.fn()} onCancel={jest.fn()} />);
+        await userEvent.click(screen.getByRole('button', { name: /find groups/i }));
+        expect(screen.getByPlaceholderText(/email you used when creating groups/i)).toBeInTheDocument();
+        expect(screen.queryByPlaceholderText(/set at creation/i)).not.toBeInTheDocument();
+    });
+
     it('calls onCancel when Cancel is clicked', async () => {
         const onCancel = jest.fn();
         render(<RecoverAdminForm onSuccess={jest.fn()} onCancel={onCancel} />);
@@ -135,5 +142,40 @@ describe('RecoverAdminForm', () => {
 
         await userEvent.click(screen.getByRole('button', { name: /hide passphrase/i }));
         expect(passphraseInput).toHaveAttribute('type', 'password');
+    });
+
+    it('sends email to /api/find-groups when on the find tab', async () => {
+        global.fetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ found: 1 }),
+        });
+
+        render(<RecoverAdminForm onSuccess={jest.fn()} onCancel={jest.fn()} />);
+        await userEvent.click(screen.getByRole('button', { name: /find groups/i }));
+
+        await userEvent.type(screen.getByPlaceholderText(/email you used when creating groups/i), 'admin@example.com');
+        await userEvent.click(screen.getByRole('button', { name: /find my groups/i }));
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+        const [url, opts] = global.fetch.mock.calls[0];
+        expect(url).toBe('/api/find-groups');
+        const body = JSON.parse(opts.body);
+        expect(body.email).toBe('admin@example.com');
+        expect(screen.getByText(/We sent a summary/i)).toBeInTheDocument();
+    });
+
+    it('shows error if /api/find-groups fails', async () => {
+        global.fetch.mockResolvedValueOnce({
+            ok: false,
+            json: async () => ({ error: 'Search failed' }),
+        });
+
+        render(<RecoverAdminForm onSuccess={jest.fn()} onCancel={jest.fn()} />);
+        await userEvent.click(screen.getByRole('button', { name: /find groups/i }));
+
+        await userEvent.type(screen.getByPlaceholderText(/email you used when creating groups/i), 'admin@test.com');
+        await userEvent.click(screen.getByRole('button', { name: /find my groups/i }));
+
+        await waitFor(() => expect(screen.getByText(/Search failed/i)).toBeInTheDocument());
     });
 });

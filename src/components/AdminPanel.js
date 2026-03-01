@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getGroup, updateGroup, getParticipants, deleteGroup, addParticipant, updateParticipant, getParticipant, validateAdminToken, subscribeToGroup, subscribeToParticipants } from '../firebase';
+import { getGroup, updateGroup, getParticipants, deleteGroup, addParticipant, updateParticipant, getParticipant, validateAdminToken, subscribeToGroup, subscribeToParticipants, hashPhrase } from '../firebase';
 import { calculateOverlap, getBestOverlapPeriods, formatDateRange } from '../utils/overlap';
 import { exportToCSV } from '../utils/export';
-import { CalendarRange, Users, Mail, Copy, CheckCircle2, ChevronDown, ChevronUp, Edit, X, Trash2, Download, Save } from 'lucide-react';
+import { CalendarRange, Users, Mail, Copy, CheckCircle2, ChevronDown, ChevronUp, Edit, X, Trash2, Download, Save, KeyRound } from 'lucide-react';
 import SlidingOverlapCalendar from './SlidingOverlapCalendar';
 import CalendarView from './CalendarView';
 
@@ -173,8 +173,14 @@ function AdminPanel({ groupId, adminToken, onBack }) {
 
   const handleSaveEdit = async () => {
     try {
-      await updateGroup(groupId, editData);
-      setGroup(editData);
+      const updates = { ...editData };
+      if (updates.newPassphrase) {
+        updates.recoveryPasswordHash = await hashPhrase(updates.newPassphrase.trim());
+        delete updates.newPassphrase;
+      }
+
+      await updateGroup(groupId, updates);
+      setGroup({ ...group, ...updates });
       setEditing(false);
     } catch (err) {
       setError(err.message);
@@ -363,11 +369,21 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                   </div>
                 </div>
               )}
-              {group.adminEmail && (
-                <div className="text-gray-400 text-sm flex items-center gap-1.5 mt-3 border-t border-dark-700/50 pt-2">
-                  <Mail size={16} className="text-gray-500" /> {group.adminEmail}
+              <div className="border-t border-dark-700/50 mt-4 pt-3 flex flex-col gap-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recovery Options</span>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Mail size={16} className={group.adminEmail ? "text-blue-400" : "text-gray-600"} />
+                  <span className={group.adminEmail ? "text-gray-300" : "text-gray-500 italic"}>
+                    {group.adminEmail || "No admin email set"}
+                  </span>
                 </div>
-              )}
+                <div className="flex items-center gap-1.5 text-sm">
+                  <KeyRound size={16} className={group.recoveryPasswordHash ? "text-blue-400" : "text-gray-600"} />
+                  <span className={group.recoveryPasswordHash ? "text-gray-300" : "text-gray-500 italic"}>
+                    {group.recoveryPasswordHash ? "Passphrase is set" : "No passphrase set"}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -415,6 +431,32 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                     onChange={(e) => setEditData({ ...editData, endDate: e.target.value })}
                     className={inputClass}
                   />
+                </div>
+              </div>
+
+              <div className="border-t border-dark-700/50 pt-4 mt-2 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-300">Recovery Settings</h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Admin Email</label>
+                  <input
+                    type="email"
+                    value={editData.adminEmail || ''}
+                    onChange={(e) => setEditData({ ...editData, adminEmail: e.target.value })}
+                    className={inputClass}
+                    placeholder="your@email.com"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Used for password recovery and sending reminders.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Recovery Passphrase</label>
+                  <input
+                    type="password"
+                    value={editData.newPassphrase || ''}
+                    onChange={(e) => setEditData({ ...editData, newPassphrase: e.target.value })}
+                    className={inputClass}
+                    placeholder={group.recoveryPasswordHash ? "Enter to change existing passphrase" : "Set a new passphrase"}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave blank to keep existing.</p>
                 </div>
               </div>
 

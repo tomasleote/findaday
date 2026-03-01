@@ -69,7 +69,11 @@ function App() {
     window.history.pushState({}, '', `?group=${groupId}&admin=${adminToken}`);
   };
 
-  const handleJoinGroup = (gId) => {
+  const handleJoinGroup = (gId, optAdminToken) => {
+    if (optAdminToken) {
+      handleRecoverAdmin(gId, optAdminToken);
+      return;
+    }
     setGroupId(gId);
     setCurrentPage('participant');
     window.history.pushState({}, '', `?group=${gId}`);
@@ -429,6 +433,8 @@ function JoinGroupForm({ onSuccess, onCancel }) {
   const [groupId, setGroupId] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isAdminFound, setIsAdminFound] = useState(false);
+  const [adminToken, setAdminToken] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -442,13 +448,47 @@ function JoinGroupForm({ onSuccess, onCancel }) {
         setError('Group not found');
         return;
       }
-      onSuccess(groupId);
+
+      const savedToken = localStorage.getItem(`vacation_admin_${groupId}`);
+      if (savedToken) {
+        setIsAdminFound(true);
+        setAdminToken(savedToken);
+      } else {
+        onSuccess(groupId);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (isAdminFound) {
+    return (
+      <div className="space-y-5 py-2">
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+          <p className="text-sm text-blue-200">
+            <strong>Welcome back, Admin!</strong><br />
+            You're the admin of this group. Where would you like to go?
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => onSuccess(groupId)}
+            className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-semibold py-2.5 px-4 rounded-lg border border-dark-700 transition-colors text-sm"
+          >
+            Participant View
+          </button>
+          <button
+            onClick={() => onSuccess(groupId, adminToken)}
+            className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-bold py-2.5 px-4 rounded-lg transition-colors text-sm"
+          >
+            Admin Panel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
