@@ -305,6 +305,7 @@ function CreateGroupForm({ onSuccess, onCancel }) {
       }
       onSuccess(result);
     } catch (err) {
+      console.error('[Group Creation Error] handleSubmit failed:', err);
       addNotification({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
@@ -456,6 +457,7 @@ function JoinGroupForm({ onSuccess, onCancel }) {
         onSuccess(groupId);
       }
     } catch (err) {
+      console.error('[Join Group Error] handleSubmit failed:', err);
       addNotification({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);

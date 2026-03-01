@@ -120,6 +120,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
       });
       setIsDirty(false);
     } catch (err) {
+      console.error('[Calendar Save Error] Save Details Only failed:', err);
       addNotification({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
@@ -144,6 +145,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
         selectedDays: savedDays // "Save Details" doesn't submit days, so keep the existing ones
       });
     } catch (err) {
+      console.error('[Calendar Submit Error] onSubmit failed:', err);
       addNotification({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);

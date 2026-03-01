@@ -111,7 +111,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
   }, [groupId, adminToken]);
 
   useEffect(() => {
-    if (group && participants.length > 0) {
+    if (group && participants?.length > 0) {
       const results = calculateOverlap(
         participants,
         group.startDate,
@@ -128,7 +128,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
 
       // Duplicate name check
       const normalizedName = formData.name.trim().toLowerCase();
-      const isDuplicate = participants.some(
+      const isDuplicate = participants?.some(
         p => p.name.trim().toLowerCase() === normalizedName && p.id !== adminParticipantId
       );
       if (isDuplicate) {
@@ -167,6 +167,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       setAvailabilitySubmitted(true);
       setTimeout(() => setAvailabilitySubmitted(false), 3000);
     } catch (err) {
+      console.error('[Admin Auth Error] handleAdminAvailability failed:', err);
       addNotification({ type: 'error', title: 'Error', message: err.message });
     }
   };
@@ -183,6 +184,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       setGroup({ ...group, ...updates });
       setEditing(false);
     } catch (err) {
+      console.error('[Admin Panel Error] handleSaveEdit failed:', err);
       addNotification({ type: 'error', title: 'Update Failed', message: err.message });
     }
   };
@@ -193,16 +195,18 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       await deleteGroup(groupId);
       onBack();
     } catch (err) {
+      console.error('[Admin Panel Error] handleDelete failed:', err);
       addNotification({ type: 'error', title: 'Delete Failed', message: err.message });
     }
   };
 
   const handleExport = () => {
     try {
-      if (group && participants.length > 0) {
+      if (group && participants?.length > 0) {
         exportToCSV(group, participants, overlaps);
       }
     } catch (err) {
+      console.error('[Admin Panel Error] handleExport failed:', err);
       addNotification({ type: 'error', title: 'Export Failed', message: err.message });
     }
   };
@@ -217,7 +221,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
           groupId,
           groupName: group.name,
           startDate: group.startDate,
-          participants: participants.map(p => ({ email: p.email })),
+          participants: participants?.map(p => ({ email: p.email })) || [],
           baseUrl: window.location.origin,
         })
       });
@@ -236,6 +240,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
         });
       }
     } catch (err) {
+      console.error('[Fetch Failure] handleSendReminder failed:', err);
       addNotification({
         type: 'error',
         title: 'Error',
@@ -295,7 +300,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
               )}
               <div className="flex gap-4 text-sm text-gray-400 flex-wrap mt-1">
                 <span className="flex items-center gap-1.5"><CalendarRange size={16} className="text-gray-500" /> {group.startDate} to {group.endDate}</span>
-                <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants.length} participants</span>
+                <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants?.length || 0} participants</span>
               </div>
             </div>
             <button
@@ -490,24 +495,19 @@ function AdminPanel({ groupId, adminToken, onBack }) {
             <div className="space-y-2">
               <button
                 onClick={handleExport}
-                disabled={participants.length === 0}
+                disabled={!participants || participants.length === 0}
                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
               >
                 <Download size={18} /> Export CSV
               </button>
               <button
                 onClick={handleSendReminder}
-                disabled={reminderSending || !participants.some(p => p.email)}
+                disabled={reminderSending || !participants?.some(p => p.email)}
                 className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-                title={!participants.some(p => p.email) ? 'No participants have an email address' : ''}
+                title={!participants?.some(p => p.email) ? 'No participants have an email address' : ''}
               >
                 <Mail size={18} /> {reminderSending ? 'Sending...' : 'Send Reminder'}
               </button>
-              {emailSent && (
-                <p className="text-emerald-400 text-sm text-center">
-                  ✅ Reminder sent{typeof emailSent === 'number' ? ` to ${emailSent} participant${emailSent !== 1 ? 's' : ''}` : ''}!
-                </p>
-              )}
               <button
                 onClick={handleDelete}
                 className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 px-4 rounded-lg transition-colors"
@@ -520,9 +520,9 @@ function AdminPanel({ groupId, adminToken, onBack }) {
           <div className="bg-dark-900 rounded-xl border border-dark-700 p-6">
             <h3 className="font-semibold text-gray-300 mb-4">Statistics</h3>
             <div className="space-y-2 text-sm text-gray-300">
-              <p>Total participants: <span className="font-bold">{participants.length}</span></p>
-              <p>Possible periods: <span className="font-bold">{overlaps.length}</span></p>
-              {overlaps.length > 0 && (
+              <p>Total participants: <span className="font-bold">{participants?.length || 0}</span></p>
+              <p>Possible periods: <span className="font-bold">{overlaps?.length || 0}</span></p>
+              {overlaps?.length > 0 && (
                 <p>Best match: <span className="font-bold">{overlaps[0].availabilityPercent}%</span></p>
               )}
             </div>
@@ -530,7 +530,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
         </div>
 
         <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 mb-8">
-          <h3 className="text-xl font-bold text-gray-50 mb-4">Participants ({participants.length})</h3>
+          <h3 className="text-xl font-bold text-gray-50 mb-4">Participants ({participants?.length || 0})</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-dark-800 border-b border-dark-700">
@@ -542,7 +542,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                 </tr>
               </thead>
               <tbody>
-                {participants.map((p, i) => (
+                {participants?.map((p, i) => (
                   <tr key={i} className="border-b border-dark-700 hover:bg-dark-800">
                     <td className="px-4 py-2 text-gray-300">{p.name || 'N/A'}</td>
                     <td className="px-4 py-2 text-gray-300">{p.email || 'N/A'}</td>
@@ -550,7 +550,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                     <td className="px-4 py-2 text-gray-300">{(p.availableDays || []).length}</td>
                   </tr>
                 ))}
-                {participants.length === 0 && (
+                {(!participants || participants.length === 0) && (
                   <tr>
                     <td colSpan="4" className="px-4 py-4 text-center text-gray-500">
                       No participants yet. Share the participant link above!
@@ -562,7 +562,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
           </div>
         </div>
 
-        {overlaps.length > 0 && (
+        {overlaps?.length > 0 && (
           <div className="mb-8">
             <SlidingOverlapCalendar
               startDate={group.startDate}
