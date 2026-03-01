@@ -323,6 +323,7 @@ function CreateGroupForm({ onSuccess, onCancel }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+          maxLength="30"
           className={inputClass}
           placeholder="e.g., Summer Trip 2024"
         />
@@ -381,6 +382,7 @@ function CreateGroupForm({ onSuccess, onCancel }) {
           type="email"
           value={adminEmail}
           onChange={(e) => setAdminEmail(e.target.value)}
+          maxLength="30"
           className={inputClass}
           placeholder="your@email.com"
         />

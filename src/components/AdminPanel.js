@@ -395,6 +395,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                   type="text"
                   value={editData.name}
                   onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                  maxLength="30"
                   className={inputClass}
                 />
               </div>
@@ -442,6 +443,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                     type="email"
                     value={editData.adminEmail || ''}
                     onChange={(e) => setEditData({ ...editData, adminEmail: e.target.value })}
+                    maxLength="30"
                     className={inputClass}
                     placeholder="your@email.com"
                   />
