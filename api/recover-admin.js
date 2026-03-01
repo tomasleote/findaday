@@ -12,9 +12,19 @@ function sha256(text) {
     return crypto.createHash('sha256').update(text, 'utf8').digest('hex');
 }
 
+function escapeHtml(unsafe) {
+    if (typeof unsafe !== 'string') return '';
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 async function readGroup(groupId) {
     const url = `${DB_URL.replace(/\/$/, '')}/groups/${groupId}.json`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!res.ok) return null;
     const data = await res.json();
     return data ?? null;
@@ -39,7 +49,7 @@ async function sendRecoveryEmail(adminEmail, groupName, adminLink) {
     await transporter.sendMail({
         from: `"Vacation Scheduler" <${process.env.EMAIL_USER}>`,
         to: adminEmail,
-        subject: `🔑 Admin link recovered for "${groupName || 'your group'}"`,
+        subject: `🔑 Admin link recovered for "${escapeHtml(groupName || 'your group')}"`,
         html: `
       <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;background:#0f172a;color:#f8fafc;border-radius:12px;overflow:hidden;">
         <div style="background:#1e3a5f;padding:28px 28px 20px;">
@@ -52,7 +62,7 @@ async function sendRecoveryEmail(adminEmail, groupName, adminLink) {
             Your admin token has been reset. Use the link below to access your admin panel.<br>
             <strong>The old link is now invalid.</strong>
           </p>
-          <a href="${adminLink}" style="display:block;padding:12px 16px;background:#1e293b;border-radius:8px;color:#60a5fa;text-decoration:none;font-size:13px;word-break:break-all;">${adminLink}</a>
+          <a href="${escapeHtml(adminLink)}" style="display:block;padding:12px 16px;background:#1e293b;border-radius:8px;color:#60a5fa;text-decoration:none;font-size:13px;word-break:break-all;">${escapeHtml(adminLink)}</a>
           <p style="color:#475569;font-size:12px;margin:24px 0 0;border-top:1px solid #1e293b;padding-top:16px;">
             If you didn't request this, your admin link may be compromised. Contact support.<br>
             Sent by Vacation Scheduler.
@@ -85,7 +95,7 @@ module.exports = async function handler(req, res) {
 
     // ── Verify identity ──────────────────────────────────────────────────────────
     if (passphrase) {
-        const providedHash = sha256(passphrase.trim());
+        const providedHash = passphrase.trim();
         if (!group.recoveryPasswordHash || providedHash !== group.recoveryPasswordHash) {
             return res.status(401).json({ error: 'Incorrect recovery passphrase' });
         }

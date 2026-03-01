@@ -37,7 +37,6 @@ describe('ParticipantView - Duplicate Name Check', () => {
         jest.clearAllMocks();
 
         useNotification.mockReturnValue({ addNotification: mockAddNotification });
-        mockAddNotification.mockClear();
 
         // Default mock behavior for successful subscription
         firebase.subscribeToGroup.mockImplementation((id, cb) => {

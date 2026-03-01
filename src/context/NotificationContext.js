@@ -80,6 +80,7 @@ const NotificationItem = ({ notification, removeNotification }) => {
             <button
                 onClick={() => removeNotification(id)}
                 className="absolute top-3 right-3 text-gray-500 hover:text-gray-300 transition-colors p-1"
+                aria-label="Close notification"
             >
                 <X size={16} />
             </button>
