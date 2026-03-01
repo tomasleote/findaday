@@ -88,6 +88,7 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
 
             onSuccess(groupId.trim(), data.adminToken);
         } catch (err) {
+            console.error('[Admin Recovery Error] handleSubmit failed:', err);
             addNotification({
                 type: 'error',
                 title: 'Error',

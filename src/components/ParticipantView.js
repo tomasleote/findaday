@@ -68,7 +68,7 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
   }, [groupId, initialParticipantId]);
 
   useEffect(() => {
-    if (group && participants.length > 0) {
+    if (group && participants?.length > 0) {
       const results = calculateOverlap(
         participants,
         group.startDate,
@@ -141,6 +141,7 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
         message: 'Your response has been recorded. Thank you!'
       });
     } catch (err) {
+      console.error('[Participant Submission Error] handleSubmit failed:', err);
       addNotification({
         type: 'error',
         title: 'Error',
@@ -194,7 +195,7 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
           <p className="text-gray-400 mb-4">Select your available dates for the vacation</p>
           <div className="flex gap-4 text-sm text-gray-400 flex-wrap">
             <span className="flex items-center gap-1.5"><CalendarRange size={16} className="text-gray-500" /> {group.startDate} to {group.endDate}</span>
-            <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants.length} people attending</span>
+            <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants?.length || 0} people attending</span>
           </div>
         </div>
 
@@ -229,10 +230,10 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
             <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 sticky top-4">
               <h3 className="text-lg font-bold text-gray-50 mb-4">Participants</h3>
               <div className="space-y-2 text-sm max-h-96 overflow-y-auto">
-                {participants.length === 0 ? (
+                {(!participants || participants.length === 0) ? (
                   <p className="text-gray-500">Be the first to join!</p>
                 ) : (
-                  participants.map((p, i) => (
+                  participants?.map((p, i) => (
                     <div key={i} className="bg-dark-800 rounded p-3 border-l-4 border-blue-500">
                       <p className="font-semibold text-gray-50">{p.name || 'Anonymous'}</p>
                       <p className="text-gray-400 text-xs">{p.duration}-day trip</p>
@@ -245,7 +246,7 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
           </div>
         </div>
 
-        {overlaps.length > 0 && (
+        {overlaps?.length > 0 && (
           <div className="mt-8">
             <h2 className="text-xl font-bold text-gray-50 mb-4">Current Group Availability</h2>
             <SlidingOverlapCalendar
