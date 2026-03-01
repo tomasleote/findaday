@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { getGroup, updateGroup, getParticipants, deleteGroup, addParticipant, updateParticipant, getParticipant, validateAdminToken, subscribeToGroup, subscribeToParticipants } from '../firebase';
+import { getGroup, updateGroup, getParticipants, deleteGroup, addParticipant, updateParticipant, getParticipant, validateAdminToken, subscribeToGroup, subscribeToParticipants, hashPhrase } from '../firebase';
 import { calculateOverlap, getBestOverlapPeriods, formatDateRange } from '../utils/overlap';
 import { exportToCSV } from '../utils/export';
-import { CalendarRange, Users, Mail, Copy, CheckCircle2, ChevronDown, ChevronUp, Edit, X, Trash2, Download, Save } from 'lucide-react';
+import { CalendarRange, Users, Mail, Copy, CheckCircle2, ChevronDown, ChevronUp, Edit, X, Trash2, Download, Save, KeyRound } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
 import SlidingOverlapCalendar from './SlidingOverlapCalendar';
 import CalendarView from './CalendarView';
 
+/**
+ * Render the admin panel UI for a specific group, providing controls for editing group metadata,
+ * managing participants and availability, viewing overlap results, exporting data, sending reminders,
+ * and deleting the group.
+ *
+ * @param {string} groupId - The identifier of the group to manage.
+ * @param {string} adminToken - Admin access token used to validate and enable admin-only features.
+ * @param {() => void} onBack - Callback invoked to navigate back to the previous or home view.
+ * @returns {JSX.Element} The Admin Panel React element.
+ */
 function AdminPanel({ groupId, adminToken, onBack }) {
   const [group, setGroup] = useState(null);
   const [participants, setParticipants] = useState([]);
@@ -15,8 +26,8 @@ function AdminPanel({ groupId, adminToken, onBack }) {
   const [editData, setEditData] = useState({});
   const [durationFilter, setDurationFilter] = useState('3');
   const [overlaps, setOverlaps] = useState([]);
-  const [emailSent, setEmailSent] = useState(false);
   const [reminderSending, setReminderSending] = useState(false);
+  const { addNotification } = useNotification();
 
   const baseUrl = window.location.origin;
   const participantLink = `${baseUrl}?group=${groupId}`;
@@ -85,8 +96,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
 
       unsubGroup = subscribeToGroup(groupId, (data) => {
         if (!isMounted) return;
-        if (!data) setError('Group not found');
-        else {
+        if (data) {
           setGroup(data);
           setEditData(prev => Object.keys(prev).length === 0 ? data : prev);
         }
@@ -167,17 +177,23 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       setAvailabilitySubmitted(true);
       setTimeout(() => setAvailabilitySubmitted(false), 3000);
     } catch (err) {
-      setError(err.message);
+      addNotification({ type: 'error', title: 'Error', message: err.message });
     }
   };
 
   const handleSaveEdit = async () => {
     try {
-      await updateGroup(groupId, editData);
-      setGroup(editData);
+      const updates = { ...editData };
+      if (updates.newPassphrase) {
+        updates.recoveryPasswordHash = await hashPhrase(updates.newPassphrase.trim());
+        delete updates.newPassphrase;
+      }
+
+      await updateGroup(groupId, updates);
+      setGroup({ ...group, ...updates });
       setEditing(false);
     } catch (err) {
-      setError(err.message);
+      addNotification({ type: 'error', title: 'Update Failed', message: err.message });
     }
   };
 
@@ -187,7 +203,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       await deleteGroup(groupId);
       onBack();
     } catch (err) {
-      setError(err.message);
+      addNotification({ type: 'error', title: 'Delete Failed', message: err.message });
     }
   };
 
@@ -197,13 +213,12 @@ function AdminPanel({ groupId, adminToken, onBack }) {
         exportToCSV(group, participants, overlaps);
       }
     } catch (err) {
-      setError('Failed to export CSV: ' + err.message);
+      addNotification({ type: 'error', title: 'Export Failed', message: err.message });
     }
   };
 
   const handleSendReminder = async () => {
     setReminderSending(true);
-    setError('');
     try {
       const response = await fetch('/api/send-reminder', {
         method: 'POST',
@@ -218,13 +233,24 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       });
       const data = await response.json();
       if (response.ok) {
-        setEmailSent(data.sentTo ?? true);
-        setTimeout(() => setEmailSent(false), 4000);
+        addNotification({
+          type: 'success',
+          title: 'Reminder Sent',
+          message: 'Reminders have been sent to participants.'
+        });
       } else {
-        setError(`Failed to send reminder: ${data.error || response.statusText}`);
+        addNotification({
+          type: 'error',
+          title: 'Failed to Send Reminder',
+          message: data.error || response.statusText
+        });
       }
     } catch (err) {
-      setError('Failed to send reminder. Check your network and try again.');
+      addNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to send reminder. Check your network and try again.'
+      });
     } finally {
       setReminderSending(false);
     }
@@ -241,8 +267,8 @@ function AdminPanel({ groupId, adminToken, onBack }) {
   if (!group) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-dark-900 rounded-xl border border-dark-700 p-8 max-w-md">
-          <p className="text-rose-400 mb-4">{error || 'Group not found'}</p>
+        <div className="bg-dark-900 rounded-xl border border-dark-700 p-8 max-w-md text-center">
+          <p className="text-rose-400 mb-6 font-medium">Group not found or could not be loaded.</p>
           <button
             onClick={onBack}
             className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg"
@@ -269,12 +295,6 @@ function AdminPanel({ groupId, adminToken, onBack }) {
           <h1 className="text-3xl font-bold text-gray-50 flex-1 text-center">Admin Panel</h1>
           <div className="w-20"></div>
         </div>
-
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
 
         <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 mb-8">
           <div className="flex justify-between items-start mb-6">
@@ -363,11 +383,21 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                   </div>
                 </div>
               )}
-              {group.adminEmail && (
-                <div className="text-gray-400 text-sm flex items-center gap-1.5 mt-3 border-t border-dark-700/50 pt-2">
-                  <Mail size={16} className="text-gray-500" /> {group.adminEmail}
+              <div className="border-t border-dark-700/50 mt-4 pt-3 flex flex-col gap-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recovery Options</span>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Mail size={16} className={group.adminEmail ? "text-blue-400" : "text-gray-600"} />
+                  <span className={group.adminEmail ? "text-gray-300" : "text-gray-500 italic"}>
+                    {group.adminEmail || "No admin email set"}
+                  </span>
                 </div>
-              )}
+                <div className="flex items-center gap-1.5 text-sm">
+                  <KeyRound size={16} className={group.recoveryPasswordHash ? "text-blue-400" : "text-gray-600"} />
+                  <span className={group.recoveryPasswordHash ? "text-gray-300" : "text-gray-500 italic"}>
+                    {group.recoveryPasswordHash ? "Passphrase is set" : "No passphrase set"}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -379,6 +409,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                   type="text"
                   value={editData.name}
                   onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                  maxLength="30"
                   className={inputClass}
                 />
               </div>
@@ -415,6 +446,33 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                     onChange={(e) => setEditData({ ...editData, endDate: e.target.value })}
                     className={inputClass}
                   />
+                </div>
+              </div>
+
+              <div className="border-t border-dark-700/50 pt-4 mt-2 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-300">Recovery Settings</h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Admin Email</label>
+                  <input
+                    type="email"
+                    value={editData.adminEmail || ''}
+                    onChange={(e) => setEditData({ ...editData, adminEmail: e.target.value })}
+                    maxLength="30"
+                    className={inputClass}
+                    placeholder="your@email.com"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Used for password recovery and sending reminders.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Recovery Passphrase</label>
+                  <input
+                    type="password"
+                    value={editData.newPassphrase || ''}
+                    onChange={(e) => setEditData({ ...editData, newPassphrase: e.target.value })}
+                    className={inputClass}
+                    placeholder={group.recoveryPasswordHash ? "Enter to change existing passphrase" : "Set a new passphrase"}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave blank to keep existing.</p>
                 </div>
               </div>
 

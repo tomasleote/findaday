@@ -1,7 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { getDatesBetween } from '../utils/overlap';
 import { Calendar, User, Mail, Clock, Sparkles, CalendarRange } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
 
+/**
+ * Render a calendar UI for selecting available dates and submitting user contact and trip details.
+ *
+ * The component displays a month-by-month calendar constrained to the date range [startDate, endDate],
+ * provides inputs for name, email, and trip duration, supports two selection modes (flexible single-day
+ * toggles and fixed-size consecutive blocks), and exposes submit/save actions that forward the current
+ * form state to the provided onSubmit handler.
+ *
+ * @param {Object} props - Component props.
+ * @param {string} props.startDate - ISO date string (YYYY-MM-DD) for the start of the selectable range.
+ * @param {string} props.endDate - ISO date string (YYYY-MM-DD) for the end of the selectable range.
+ * @param {(payload: {name: string, email: string, duration: number, blockType: string, selectedDays: string[]}) => Promise|any} props.onSubmit - Called when submitting or saving details. Receives an object with `name`, `email`, numeric `duration`, `blockType` (either `'flexible'` or a stringified block size), and `selectedDays` (array of ISO date strings).
+ * @param {string[]} [props.savedDays=[]] - Optional preloaded array of selected date strings (YYYY-MM-DD) used to initialize or sync selections.
+ * @param {string} [props.initialName=''] - Initial value for the name input.
+ * @param {string} [props.initialEmail=''] - Initial value for the email input.
+ * @param {string|number} [props.initialDuration='3'] - Initial duration value (days) or the string `'flexible'` when using flexible mode.
+ *
+ * @returns {JSX.Element} The rendered CalendarView component.
+ */
 function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialName = '', initialEmail = '', initialDuration = '3' }) {
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
@@ -11,7 +31,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
   const [currentMonth, setCurrentMonth] = useState(new Date(startDate).getMonth());
   const [currentYear, setCurrentYear] = useState(new Date(startDate).getFullYear());
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { addNotification } = useNotification();
   const [isDirty, setIsDirty] = useState(false);
 
   // Sync savedDays from parent if they are fetched after initial mount or updated post-submit
@@ -99,12 +119,12 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
     e.preventDefault();
 
     if (!name.trim()) {
-      setError('Please enter your name');
+      addNotification({ type: 'warning', message: 'Please enter your name' });
       return;
     }
 
     if (selectedDays.length === 0) {
-      setError('Please select at least one day');
+      addNotification({ type: 'warning', message: 'Please select at least one day' });
       return;
     }
 
@@ -119,7 +139,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
       });
       setIsDirty(false);
     } catch (err) {
-      setError(err.message);
+      addNotification({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -129,7 +149,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
     e.preventDefault();
 
     if (!name.trim()) {
-      setError('Please enter your name');
+      addNotification({ type: 'warning', message: 'Please enter your name' });
       return;
     }
 
@@ -143,7 +163,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
         selectedDays: savedDays // "Save Details" doesn't submit days, so keep the existing ones
       });
     } catch (err) {
-      setError(err.message);
+      addNotification({ type: 'error', title: 'Error', message: err.message });
     } finally {
       setLoading(false);
     }
@@ -203,6 +223,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              maxLength="30"
               className="w-full bg-dark-800 hover:bg-dark-700 text-gray-50 font-medium pl-10 pr-4 py-2.5 rounded-full border border-dark-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
               placeholder="Email (optional)"
             />
@@ -355,15 +376,6 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
             <span data-testid="day-count">
               <strong>{selectedDays.length}</strong> day{selectedDays.length !== 1 ? 's' : ''} selected
             </span>
-          </div>
-        )}
-
-        {/* Global Error Message */}
-        {error && (
-          <div className="mt-6 mb-2">
-            <p className="text-rose-400 font-bold text-sm bg-rose-500/10 border border-rose-500/20 px-4 py-3 rounded-xl">
-              {error}
-            </p>
           </div>
         )}
 
