@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { hashPhrase } from '../services/adminService';
 import { KeyRound, Mail, Eye, EyeOff, ArrowRight, Loader2, Search } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
+import { Input, Label, Button } from '../shared/ui';
 
 /**
  * RecoverAdminForm
@@ -23,11 +24,6 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
     const [showPassphrase, setShowPassphrase] = useState(false);
     const [loading, setLoading] = useState(false);
     const { addNotification } = useNotification();
-
-    const inputClass =
-        'w-full px-3 py-2.5 bg-dark-800 border border-dark-700 rounded-lg text-gray-50 ' +
-        'placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 ' +
-        'focus:border-blue-500 transition-colors text-sm';
 
     const switchTab = (t) => { setTab(t); };
 
@@ -135,14 +131,14 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                 {/* Group ID — only for passphrase/email tabs */}
                 {tab !== 'find' && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1.5">Group ID</label>
-                        <input
+                        <Label>Group ID</Label>
+                        <Input
                             id="recover-group-id"
                             type="text"
                             value={groupId}
                             onChange={(e) => setGroupId(e.target.value)}
                             required
-                            className={inputClass}
+                            className="text-sm"
                             placeholder="Paste your group ID here"
                         />
                     </div>
@@ -151,15 +147,15 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                 {/* Passphrase tab */}
                 {tab === 'passphrase' && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1.5">Recovery passphrase</label>
+                        <Label>Recovery passphrase</Label>
                         <div className="relative">
-                            <input
+                            <Input
                                 id="recover-passphrase"
                                 type={showPassphrase ? 'text' : 'password'}
                                 value={passphrase}
                                 onChange={(e) => setPassphrase(e.target.value)}
                                 required
-                                className={`${inputClass} pr-10`}
+                                className="text-sm pr-10"
                                 placeholder="Enter the passphrase you set at creation"
                             />
                             <button
@@ -180,15 +176,15 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                 {/* Email recovery tab */}
                 {tab === 'email' && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1.5">Admin email</label>
-                        <input
+                        <Label>Admin email</Label>
+                        <Input
                             id="recover-email"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             maxLength="254"
-                            className={inputClass}
+                            className="text-sm"
                             placeholder="The email you used when creating the group"
                         />
                         <p className="text-xs text-gray-500 mt-1.5">
@@ -204,15 +200,15 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                             Don't remember your Group ID? Enter your email and we'll send you a summary of all groups you administer.
                         </p>
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1.5">Your admin email</label>
-                            <input
+                            <Label>Your admin email</Label>
+                            <Input
                                 id="find-groups-email"
                                 type="email"
                                 value={findEmail}
                                 onChange={(e) => setFindEmail(e.target.value)}
                                 required
                                 maxLength="254"
-                                className={inputClass}
+                                className="text-sm"
                                 placeholder="The email you used when creating groups"
                             />
                         </div>

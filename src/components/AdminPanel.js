@@ -8,6 +8,7 @@ import { validateParticipantName, validateEmail, sanitizeName, sanitizeEmail, ge
 import { CalendarRange, Users, Mail, Copy, CheckCircle2, ChevronDown, ChevronUp, Edit, X, Trash2, Download, Save, KeyRound, Eye, EyeOff, UserPlus, Link, Send } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
+import { Modal, Input, Label, ReadOnlyInput, CopyButton, ConfirmDialog, Button, LoadingSpinner, Card } from '../shared/ui';
 import SlidingOverlapCalendar from './SlidingOverlapCalendar';
 import CalendarView from './CalendarView';
 
@@ -462,30 +463,21 @@ function AdminPanel({ groupId, adminToken, onBack }) {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl text-gray-400">Loading...</div>
-      </div>
-    );
+    return <LoadingSpinner label="Loading..." />;
   }
 
   if (!group) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-dark-900 rounded-xl border border-dark-700 p-8 max-w-md text-center">
+        <Card variant="default" className="text-center max-w-md">
           <p className="text-rose-400 mb-6 font-medium">Group not found or could not be loaded.</p>
-          <button
-            onClick={onBack}
-            className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg"
-          >
+          <Button variant="primary" fullWidth onClick={onBack}>
             Go Home
-          </button>
-        </div>
+          </Button>
+        </Card>
       </div>
     );
   }
-
-  const inputClass = "w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-gray-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-colors";
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -526,40 +518,31 @@ function AdminPanel({ groupId, adminToken, onBack }) {
               {!editing && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-400 mb-1">
+                    <Label size="small">
                       Participant link (share this):
-                    </label>
+                    </Label>
                     <div className="flex gap-2">
-                      <input
-                        readOnly
+                      <ReadOnlyInput value={participantLink} />
+                      <CopyButton
                         value={participantLink}
-                        className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
+                        copiedOverride={copiedPLink}
+                        onCopyOverride={(v) => copyPLink(v)}
                       />
-                      <button
-                        onClick={() => copyPLink(participantLink)}
-                        className="px-3 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg text-sm font-semibold transition-colors"
-                      >
-                        {copiedPLink ? 'Copied!' : 'Copy'}
-                      </button>
                     </div>
                   </div>
                   {adminLink && (
                     <div>
-                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                      <Label size="small">
                         Your admin link (keep private):
-                      </label>
+                      </Label>
                       <div className="flex gap-2 mb-3">
-                        <input
-                          readOnly
+                        <ReadOnlyInput value={adminLink} />
+                        <CopyButton
                           value={adminLink}
-                          className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
+                          variant="secondary"
+                          copiedOverride={copiedALink}
+                          onCopyOverride={(v) => copyALink(v)}
                         />
-                        <button
-                          onClick={() => copyALink(adminLink)}
-                          className="px-3 py-2 bg-dark-700 hover:bg-dark-800 text-gray-300 rounded-lg text-sm font-semibold border border-dark-700 transition-colors"
-                        >
-                          {copiedALink ? 'Copied!' : 'Copy'}
-                        </button>
                       </div>
                       <label className="block text-xs font-medium text-gray-400 mb-1">
                         Group ID:
@@ -599,24 +582,24 @@ function AdminPanel({ groupId, adminToken, onBack }) {
               {editing && (
                 <div className="space-y-4 border-t border-dark-700 pt-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Group Name</label>
-                    <input
+                    <Label size="compact">Group Name</Label>
+                    <Input
                       type="text"
+                      size="compact"
                       value={editData.name}
                       onChange={(e) => setEditData({ ...editData, name: e.target.value })}
                       maxLength="30"
-                      className={inputClass}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                    <Label size="compact">
                       Description {(editData.description || '').length}/500
-                    </label>
+                    </Label>
                     <textarea
                       value={editData.description || ''}
                       onChange={(e) => setEditData({ ...editData, description: e.target.value.slice(0, 500) })}
-                      className={inputClass}
+                      className="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-gray-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-colors"
                       rows="2"
                       maxLength="500"
                     />
@@ -624,22 +607,22 @@ function AdminPanel({ groupId, adminToken, onBack }) {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
-                      <input
+                      <Label size="compact">Start Date</Label>
+                      <Input
                         type="date"
+                        size="compact"
                         value={editData.startDate}
                         onChange={(e) => setEditData({ ...editData, startDate: e.target.value })}
-                        className={inputClass}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">End Date</label>
-                      <input
+                      <Label size="compact">End Date</Label>
+                      <Input
                         type="date"
+                        size="compact"
                         value={editData.endDate}
                         onChange={(e) => setEditData({ ...editData, endDate: e.target.value })}
-                        className={inputClass}
                       />
                     </div>
                   </div>
@@ -648,12 +631,12 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                     <h3 className="text-sm font-semibold text-gray-300">Recovery Settings</h3>
                     <div>
                       <label className="block text-sm font-medium text-gray-400 mb-1">Admin Email</label>
-                      <input
+                      <Input
                         type="email"
+                        size="compact"
                         value={editData.adminEmail || ''}
                         onChange={(e) => setEditData({ ...editData, adminEmail: e.target.value })}
                         maxLength="30"
-                        className={inputClass}
                         placeholder="your@email.com"
                       />
                       <p className="text-xs text-gray-500 mt-1">Used for password recovery and sending reminders.</p>
@@ -661,11 +644,12 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                     <div>
                       <label className="block text-sm font-medium text-gray-400 mb-1">Recovery Passphrase</label>
                       <div className="relative">
-                        <input
+                        <Input
                           type={showPassphrase ? 'text' : 'password'}
+                          size="compact"
                           value={editData.newPassphrase || ''}
                           onChange={(e) => setEditData({ ...editData, newPassphrase: e.target.value })}
-                          className={`${inputClass} pr-10`}
+                          className="pr-10"
                           placeholder={group.recoveryPasswordHash ? "Enter to change existing passphrase" : "Set a new passphrase"}
                         />
                         <button
@@ -757,26 +741,26 @@ function AdminPanel({ groupId, adminToken, onBack }) {
               <h4 className="text-sm font-semibold text-gray-300 mb-3">New Participant</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Name *</label>
-                  <input
+                  <Label size="small">Name *</Label>
+                  <Input
                     type="text"
+                    size="compact"
                     value={newParticipantName}
                     onChange={(e) => setNewParticipantName(e.target.value)}
                     placeholder="Participant name"
                     maxLength="100"
-                    className={inputClass}
                     data-testid="create-participant-name"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">Email (optional)</label>
-                  <input
+                  <Label size="small">Email (optional)</Label>
+                  <Input
                     type="email"
+                    size="compact"
                     value={newParticipantEmail}
                     onChange={(e) => setNewParticipantEmail(e.target.value)}
                     placeholder="email@example.com"
                     maxLength="255"
-                    className={inputClass}
                     data-testid="create-participant-email"
                   />
                 </div>
@@ -870,93 +854,71 @@ function AdminPanel({ groupId, adminToken, onBack }) {
         </div>
 
         {/* Edit Participant Modal */}
-        {showEditParticipant && editingParticipant && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setShowEditParticipant(false); setEditingParticipant(null); }}>
-            <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-50">Edit Participant</h2>
-                <button onClick={() => { setShowEditParticipant(false); setEditingParticipant(null); }} className="text-gray-500 hover:text-gray-300 transition-colors" aria-label="Close modal">
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Name *</label>
-                  <input
-                    type="text"
-                    value={editParticipantName}
-                    onChange={(e) => setEditParticipantName(e.target.value)}
-                    maxLength="100"
-                    className={inputClass}
-                    data-testid="edit-participant-name-input"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={editParticipantEmail}
-                    onChange={(e) => setEditParticipantEmail(e.target.value)}
-                    maxLength="255"
-                    className={inputClass}
-                    data-testid="edit-participant-email-input"
-                  />
-                </div>
-                <p className="text-xs text-gray-500">Note: Participant availability can only be changed by the participant themselves.</p>
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={handleEditParticipant}
-                    disabled={editLoading || !editParticipantName.trim()}
-                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                    data-testid="edit-participant-save"
-                  >
-                    <Save size={18} /> {editLoading ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    onClick={() => { setShowEditParticipant(false); setEditingParticipant(null); }}
-                    className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold py-2 px-4 rounded-lg border border-dark-700 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+        <Modal
+          open={showEditParticipant && !!editingParticipant}
+          onClose={() => { setShowEditParticipant(false); setEditingParticipant(null); }}
+          title="Edit Participant"
+        >
+          <div className="space-y-4">
+            <div>
+              <Label size="compact">Name *</Label>
+              <Input
+                type="text"
+                size="compact"
+                value={editParticipantName}
+                onChange={(e) => setEditParticipantName(e.target.value)}
+                maxLength="100"
+                data-testid="edit-participant-name-input"
+              />
+            </div>
+            <div>
+              <Label size="compact">Email</Label>
+              <Input
+                type="email"
+                size="compact"
+                value={editParticipantEmail}
+                onChange={(e) => setEditParticipantEmail(e.target.value)}
+                maxLength="255"
+                data-testid="edit-participant-email-input"
+              />
+            </div>
+            <p className="text-xs text-gray-500">Note: Participant availability can only be changed by the participant themselves.</p>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleEditParticipant}
+                disabled={editLoading || !editParticipantName.trim()}
+                className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                data-testid="edit-participant-save"
+              >
+                <Save size={18} /> {editLoading ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={() => { setShowEditParticipant(false); setEditingParticipant(null); }}
+                className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold py-2 px-4 rounded-lg border border-dark-700 transition-colors"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        )}
+        </Modal>
 
         {/* Delete Confirmation Modal */}
-        {showDeleteConfirm && deletingParticipant && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setShowDeleteConfirm(false); setDeletingParticipant(null); }}>
-            <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-500/10 text-rose-400 mb-4">
-                  <Trash2 size={24} />
-                </div>
-                <h2 className="text-xl font-bold text-gray-50 mb-2">Delete Participant?</h2>
-                <p className="text-gray-400 text-sm">
-                  Are you sure you want to remove <strong className="text-gray-200">{deletingParticipant.name}</strong> from this group? This action cannot be undone.
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => { setShowDeleteConfirm(false); setDeletingParticipant(null); }}
-                  className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold py-2 px-4 rounded-lg border border-dark-700 transition-colors"
-                  data-testid="delete-cancel"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteParticipant}
-                  disabled={deleteLoading}
-                  className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
-                  data-testid="delete-confirm"
-                >
-                  {deleteLoading ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <ConfirmDialog
+          open={showDeleteConfirm && !!deletingParticipant}
+          onClose={() => { setShowDeleteConfirm(false); setDeletingParticipant(null); }}
+          onConfirm={handleDeleteParticipant}
+          icon={<Trash2 size={24} />}
+          title="Delete Participant?"
+          message={
+            <>Are you sure you want to remove <strong className="text-gray-200">{deletingParticipant?.name}</strong> from this group? This action cannot be undone.</>
+          }
+          confirmLabel="Delete"
+          loadingLabel="Deleting..."
+          loading={deleteLoading}
+          variant="danger"
+          confirmTestId="delete-confirm"
+          cancelTestId="delete-cancel"
+        />
 
         {overlaps?.length > 0 && (
           <div className="mb-8">
