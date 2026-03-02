@@ -1,12 +1,13 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import './index.css';
 import { GroupProvider } from './shared/context';
-import { LoadingSpinner, ErrorBoundary } from './shared/ui';
+import { LoadingSpinner, ErrorBoundary, Footer } from './shared/ui';
 
 const AdminPanel = React.lazy(() => import('./features/admin/AdminPage'));
 const ParticipantView = React.lazy(() => import('./components/ParticipantView'));
 const HomePage = React.lazy(() => import('./features/home/HomePage'));
 const GroupCreatedScreen = React.lazy(() => import('./features/home/GroupCreatedScreen'));
+const DocumentationPage = React.lazy(() => import('./features/docs/DocumentationPage'));
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -15,6 +16,12 @@ function App() {
   const [participantId, setParticipantId] = useState(null);
 
   useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/docs') {
+      setCurrentPage('docs');
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const gId = urlParams.get('group');
     const adminTok = urlParams.get('admin');
@@ -101,43 +108,55 @@ function App() {
 
   return (
     <GroupProvider groupId={groupId} adminToken={adminToken} isAdmin={isAdmin}>
-      <div className="min-h-screen bg-dark-950 text-gray-50">
-        <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <LoadingSpinner label="Loading page..." size="lg" />
-          </div>
-        }>
-          {currentPage === 'home' && (
-            <ErrorBoundary>
-              <HomePage onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} onRecoverAdmin={handleRecoverAdmin} />
-            </ErrorBoundary>
-          )}
-          {currentPage === 'created' && (
-            <ErrorBoundary>
-              <GroupCreatedScreen
-                groupId={groupId}
-                adminToken={adminToken}
-                onEnterAdmin={handleEnterAdmin}
-                onBack={handleBackHome}
-              />
-            </ErrorBoundary>
-          )}
-          {currentPage === 'admin' && (
-            <ErrorBoundary>
-              <AdminPanel
-                onBack={handleBackHome}
-              />
-            </ErrorBoundary>
-          )}
-          {currentPage === 'participant' && (
-            <ErrorBoundary>
-              <ParticipantView
-                participantId={participantId}
-                onBack={handleBackHome}
-              />
-            </ErrorBoundary>
-          )}
-        </Suspense>
+      <div className="min-h-screen bg-dark-950 text-gray-50 flex flex-col">
+        <main className="flex-grow flex flex-col">
+          <Suspense fallback={
+            <div className="flex-grow flex items-center justify-center">
+              <LoadingSpinner label="Loading page..." size="lg" />
+            </div>
+          }>
+            {currentPage === 'home' && (
+              <ErrorBoundary>
+                <HomePage onCreateGroup={handleCreateGroup} onJoinGroup={handleJoinGroup} onRecoverAdmin={handleRecoverAdmin} />
+              </ErrorBoundary>
+            )}
+            {currentPage === 'created' && (
+              <ErrorBoundary>
+                <GroupCreatedScreen
+                  groupId={groupId}
+                  adminToken={adminToken}
+                  onEnterAdmin={handleEnterAdmin}
+                  onBack={handleBackHome}
+                />
+              </ErrorBoundary>
+            )}
+            {currentPage === 'admin' && (
+              <ErrorBoundary>
+                <AdminPanel
+                  onBack={handleBackHome}
+                />
+              </ErrorBoundary>
+            )}
+            {currentPage === 'participant' && (
+              <ErrorBoundary>
+                <ParticipantView
+                  participantId={participantId}
+                  onBack={handleBackHome}
+                />
+              </ErrorBoundary>
+            )}
+            {currentPage === 'docs' && (
+              <ErrorBoundary>
+                <DocumentationPage onBack={handleBackHome} />
+              </ErrorBoundary>
+            )}
+          </Suspense>
+        </main>
+        <Footer onNavigateDocs={(path) => {
+          setCurrentPage('docs');
+          window.history.pushState({}, '', path);
+          window.scrollTo(0, 0);
+        }} />
       </div>
     </GroupProvider>
   );
