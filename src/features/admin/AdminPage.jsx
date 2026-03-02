@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { updateGroup, deleteGroup } from '../../services/groupService';
 import { addParticipant, updateParticipant } from '../../services/participantService';
 import { hashPhrase } from '../../services/adminService';
+import { apiCall } from '../../services/apiService';
 import { exportToCSV } from '../../utils/export';
 import { Download, Mail } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
@@ -92,9 +93,8 @@ function AdminPage({ onBack }) {
   const handleSendReminder = useCallback(async () => {
     setReminderSending(true);
     try {
-      const response = await fetch('/api/send-reminder', {
+      await apiCall('/api/send-reminder', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groupId,
           groupName: group.name,
@@ -103,15 +103,10 @@ function AdminPage({ onBack }) {
           baseUrl: window.location.origin,
         })
       });
-      const data = await response.json();
-      if (response.ok) {
-        addNotification({ type: 'success', title: 'Reminder Sent', message: 'Reminders have been sent to participants.' });
-      } else {
-        addNotification({ type: 'error', title: 'Failed to Send Reminder', message: data.error || response.statusText });
-      }
+      addNotification({ type: 'success', title: 'Reminder Sent', message: 'Reminders have been sent to participants.' });
     } catch (err) {
       console.error('[Fetch Failure] handleSendReminder failed:', err);
-      addNotification({ type: 'error', title: 'Error', message: 'Failed to send reminder. Check your network and try again.' });
+      addNotification({ type: 'error', title: 'Error', message: err.message || 'Failed to send reminder.' });
     } finally {
       setReminderSending(false);
     }
