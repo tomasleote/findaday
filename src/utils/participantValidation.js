@@ -79,5 +79,6 @@ export function sanitizeEmail(email) {
 export function generateParticipantLink(baseUrl, groupId, participantId) {
     // Strip trailing slash from baseUrl
     const origin = (baseUrl || '').replace(/\/+$/, '');
-    return `${origin}?group=${groupId}&p=${participantId}`;
+    const params = new URLSearchParams({ group: groupId, p: participantId });
+    return `${origin}?${params.toString()}`;
 }

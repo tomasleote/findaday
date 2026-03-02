@@ -347,21 +347,31 @@ function AdminPanel({ groupId, adminToken, onBack }) {
     }
 
     setEditLoading(true);
-    const originalParticipants = [...participants];
+    // Capture original values for targeted rollback
+    const originalEntry = participants.find(p => p.id === editingParticipant.id);
+    const editId = editingParticipant.id;
     // Optimistic update
     setParticipants(prev =>
-      prev.map(p => p.id === editingParticipant.id ? { ...p, name, email } : p)
+      prev.map(p => p.id === editId ? { ...p, name, email } : p)
     );
 
     try {
-      await updateParticipant(groupId, editingParticipant.id, { name, email });
+      await updateParticipant(groupId, editId, { name, email });
       addNotification({ type: 'success', title: 'Participant Updated', message: `${name}'s details have been saved.` });
       setShowEditParticipant(false);
       setEditingParticipant(null);
     } catch (err) {
       console.error('[Admin Panel] handleEditParticipant failed:', err);
-      // Rollback
-      setParticipants(originalParticipants);
+      // Targeted rollback: only revert this participant, preserve concurrent realtime updates
+      if (originalEntry) {
+        setParticipants(prev => {
+          const exists = prev.some(p => p.id === editId);
+          if (exists) {
+            return prev.map(p => p.id === editId ? originalEntry : p);
+          }
+          return [...prev, originalEntry];
+        });
+      }
       addNotification({ type: 'error', title: 'Update Failed', message: err.message });
     } finally {
       setEditLoading(false);
@@ -377,32 +387,41 @@ function AdminPanel({ groupId, adminToken, onBack }) {
     if (!deletingParticipant) return;
 
     setDeleteLoading(true);
-    const originalParticipants = [...participants];
+    // Capture original entry for targeted rollback
+    const originalEntry = { ...deletingParticipant };
+    const deleteId = deletingParticipant.id;
     const deletedName = deletingParticipant.name || 'Participant';
     // Optimistic removal
-    setParticipants(prev => prev.filter(p => p.id !== deletingParticipant.id));
+    setParticipants(prev => prev.filter(p => p.id !== deleteId));
 
     try {
-      await deleteParticipant(groupId, deletingParticipant.id);
+      await deleteParticipant(groupId, deleteId);
       addNotification({ type: 'success', title: 'Participant Deleted', message: `${deletedName} has been removed from the group.` });
       setShowDeleteConfirm(false);
       setDeletingParticipant(null);
     } catch (err) {
       console.error('[Admin Panel] handleDeleteParticipant failed:', err);
-      // Rollback
-      setParticipants(originalParticipants);
+      // Targeted rollback: re-insert deleted participant if not already present
+      setParticipants(prev => {
+        const exists = prev.some(p => p.id === deleteId);
+        return exists ? prev : [...prev, originalEntry];
+      });
       addNotification({ type: 'error', title: 'Delete Failed', message: err.message });
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  const handleCopyParticipantLink = (participant) => {
+  const handleCopyParticipantLink = async (participant) => {
     const link = generateParticipantLink(baseUrl, groupId, participant.id);
-    navigator.clipboard.writeText(link);
-    setCopiedLinkId(participant.id);
-    addNotification({ type: 'success', title: 'Link Copied', message: `Personal link for ${participant.name} copied to clipboard.` });
-    setTimeout(() => setCopiedLinkId(null), 2000);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedLinkId(participant.id);
+      addNotification({ type: 'success', title: 'Link Copied', message: `Personal link for ${participant.name} copied to clipboard.` });
+      setTimeout(() => setCopiedLinkId(null), 2000);
+    } catch (err) {
+      addNotification({ type: 'error', title: 'Copy Failed', message: err.message || 'Could not copy to clipboard.' });
+    }
   };
 
   const handleSendInvite = async (participant) => {
@@ -514,10 +533,14 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                         className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
                       />
                       <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(participantLink);
-                          setCopiedPLink(true);
-                          setTimeout(() => setCopiedPLink(false), 2000);
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(participantLink);
+                            setCopiedPLink(true);
+                            setTimeout(() => setCopiedPLink(false), 2000);
+                          } catch (err) {
+                            addNotification({ type: 'error', title: 'Copy Failed', message: err.message || 'Could not copy to clipboard.' });
+                          }
                         }}
                         className="px-3 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg text-sm font-semibold transition-colors"
                       >
@@ -537,10 +560,14 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                           className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
                         />
                         <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(adminLink);
-                            setCopiedALink(true);
-                            setTimeout(() => setCopiedALink(false), 2000);
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(adminLink);
+                              setCopiedALink(true);
+                              setTimeout(() => setCopiedALink(false), 2000);
+                            } catch (err) {
+                              addNotification({ type: 'error', title: 'Copy Failed', message: err.message || 'Could not copy to clipboard.' });
+                            }
                           }}
                           className="px-3 py-2 bg-dark-700 hover:bg-dark-800 text-gray-300 rounded-lg text-sm font-semibold border border-dark-700 transition-colors"
                         >
@@ -555,10 +582,14 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                           {groupId}
                         </code>
                         <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(groupId);
-                            setCopiedGroupId(true);
-                            setTimeout(() => setCopiedGroupId(false), 2000);
+                          onClick={async () => {
+                            try {
+                              await navigator.clipboard.writeText(groupId);
+                              setCopiedGroupId(true);
+                              setTimeout(() => setCopiedGroupId(false), 2000);
+                            } catch (err) {
+                              addNotification({ type: 'error', title: 'Copy Failed', message: err.message || 'Could not copy to clipboard.' });
+                            }
                           }}
                           className="px-3 py-1.5 bg-dark-700 hover:bg-dark-800 text-gray-300 rounded-lg text-xs font-semibold border border-dark-700 transition-colors flex items-center gap-1"
                         >
