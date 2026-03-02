@@ -303,7 +303,7 @@ function SlidingOverlapCalendar({ startDate, endDate, participants, duration, ov
                                     <Users size={16} className="text-emerald-400" />
                                     Who can make it
                                 </h5>
-                                {blockDetails.available.length > 0 ? (
+                                {blockDetails?.available?.length > 0 ? (
                                     <div className="flex flex-wrap gap-2">
                                         {blockDetails.available.map((p, i) => (
                                             <div key={i} className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full text-sm font-medium">
@@ -322,7 +322,7 @@ function SlidingOverlapCalendar({ startDate, endDate, participants, duration, ov
                                     <UserX size={16} className="text-rose-400" />
                                     Who is holding you back
                                 </h5>
-                                {blockDetails.unavailable.length > 0 ? (
+                                {blockDetails?.unavailable?.length > 0 ? (
                                     <div className="flex flex-col gap-2">
                                         {blockDetails.unavailable.map((p, i) => {
                                             // Calculate exactly how many days they are missing for THIS block
@@ -374,7 +374,7 @@ function SlidingOverlapCalendar({ startDate, endDate, participants, duration, ov
                         {(() => {
                             const topFilteredOverlaps = getTopFilteredOverlaps(overlaps);
 
-                            if (topFilteredOverlaps.length === 0) {
+                            if (!topFilteredOverlaps || topFilteredOverlaps.length === 0) {
                                 return (
                                     <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-dark-800 rounded-xl border border-dashed border-dark-700">
                                         <CalendarIcon size={48} className="text-gray-600 mb-4" />
