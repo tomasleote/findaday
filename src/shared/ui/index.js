@@ -6,3 +6,4 @@ export { default as ConfirmDialog } from './ConfirmDialog';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as Card } from './Card';
 export { default as TruncatedText } from './TruncatedText';
+export { default as ErrorBoundary } from './ErrorBoundary';

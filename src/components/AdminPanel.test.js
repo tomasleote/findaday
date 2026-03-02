@@ -447,7 +447,7 @@ describe('Send Invite', () => {
         await waitFor(() => {
             expect(mockAddNotification).toHaveBeenCalledWith(expect.objectContaining({
                 type: 'error',
-                title: 'Network Error',
+                title: 'Invite Failed',
             }));
         });
     });

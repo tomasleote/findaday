@@ -32,7 +32,17 @@ function JoinGroupForm({ onSuccess, onCancel }) {
       }
     } catch (err) {
       console.error('[Join Group Error] handleSubmit failed:', err);
-      addNotification({ type: 'error', title: 'Error', message: err.message });
+      const isOffline =
+        (typeof window !== 'undefined' && !window.navigator.onLine) ||
+        err.name === 'TypeError' ||
+        err.name === 'NetworkError' ||
+        (err.message && (err.message.includes('failed to fetch') || err.message.includes('network') || err.message === 'Failed to fetch'));
+
+      if (isOffline) {
+        addNotification({ type: 'error', title: 'Network Error', message: 'You appear to be offline. Please check your connection and try again.' });
+      } else {
+        addNotification({ type: 'error', title: 'Error', message: err.message });
+      }
     } finally {
       setLoading(false);
     }

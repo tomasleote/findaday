@@ -69,6 +69,7 @@ export function useGroupData(groupId, adminToken, onBack) {
 
       unsubGroup = subscribeToGroup(groupId, (data) => {
         if (!isMounted) return;
+        setError(null);
         if (data) {
           setGroup(data);
           setEditData(prev => Object.keys(prev).length === 0 ? data : prev);
@@ -77,11 +78,20 @@ export function useGroupData(groupId, adminToken, onBack) {
           setEditData({});
         }
         onLoad();
+      }, (err) => {
+        if (!isMounted) return;
+        setError(err.message || 'Failed to load group data.');
+        onLoad();
       });
 
       unsubParts = subscribeToParticipants(groupId, (data) => {
         if (!isMounted) return;
+        setError(null);
         setParticipants(data || []);
+        onLoad();
+      }, (err) => {
+        if (!isMounted) return;
+        setError(err.message || 'Failed to load participants.');
         onLoad();
       });
     };
