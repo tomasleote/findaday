@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { X, ShieldCheck } from 'lucide-react';
 
-export function StorageConsent() {
+export function StorageConsent({ onNavigate }) {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        // Check if user has already dismissed the banner
-        const dismissed = localStorage.getItem('vacation_storage_consent');
-        if (!dismissed) {
+        // Check if user has already dismissed or declined the banner
+        const consent = localStorage.getItem('vacation_storage_consent');
+        if (!consent) {
             // Delay showing it slightly for better UX
             const timer = setTimeout(() => setIsVisible(true), 1500);
             return () => clearTimeout(timer);
@@ -15,7 +15,22 @@ export function StorageConsent() {
     }, []);
 
     const handleAccept = () => {
-        localStorage.setItem('vacation_storage_consent', 'true');
+        try {
+            localStorage.setItem('vacation_storage_consent', 'accepted');
+        } catch (e) {
+            console.warn('[StorageConsent] Failed to save consent:', e);
+        }
+        setIsVisible(false);
+    };
+
+    const handleDecline = () => {
+        try {
+            // "Declining" still dismisses the banner, but we note they didn't explicitly accept.
+            // Under GDPR, we shouldn't keep pestering them if they say no.
+            localStorage.setItem('vacation_storage_consent', 'declined');
+        } catch (e) {
+            console.warn('[StorageConsent] Failed to save decline state:', e);
+        }
         setIsVisible(false);
     };
 
@@ -40,29 +55,38 @@ export function StorageConsent() {
                             </button>
                         </div>
                         <p className="text-sm text-gray-400 leading-relaxed mb-4">
-                            We use local storage to keep you logged into your groups automatically.
-                            By continuing to use this site, you agree to this functional storage.
+                            We use local storage for functional purposes to keep you logged into your groups.
+                            You can accept this convenience or decline to stay anonymous.
                         </p>
-                        <div className="flex gap-3">
+                        <div className="flex flex-col gap-2">
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleAccept}
+                                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-sm font-bold py-2 rounded-lg transition-all shadow-lg shadow-blue-500/20"
+                                >
+                                    Accept
+                                </button>
+                                <button
+                                    onClick={handleDecline}
+                                    className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 text-sm font-bold py-2 rounded-lg border border-dark-700 transition-all"
+                                >
+                                    Decline
+                                </button>
+                            </div>
                             <button
-                                onClick={handleAccept}
-                                className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-sm font-bold py-2 rounded-lg transition-all shadow-lg shadow-blue-500/20"
-                            >
-                                Got it
-                            </button>
-                            <a
-                                href="/privacy"
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    // We can't easily trigger the App's navigation here without context
-                                    // but we can just use the link if the App handles popstate/URL change
-                                    window.history.pushState({}, '', '/privacy');
-                                    window.dispatchEvent(new Event('popstate'));
+                                    if (onNavigate) {
+                                        onNavigate('/privacy');
+                                    } else {
+                                        window.history.pushState({}, '', '/privacy');
+                                        window.dispatchEvent(new Event('popstate'));
+                                    }
                                 }}
-                                className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 text-sm font-bold py-2 rounded-lg text-center transition-all border border-dark-700"
+                                className="text-[11px] text-blue-500 hover:text-blue-400 font-bold uppercase tracking-wider text-center mt-1"
                             >
-                                Learn More
-                            </a>
+                                Learn More about Privacy
+                            </button>
                         </div>
                     </div>
                 </div>

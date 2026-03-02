@@ -1,7 +1,7 @@
 import React from 'react';
 import { Mail, Github, BookOpen } from 'lucide-react';
 
-export function Footer({ onNavigateDocs, onNavigatePrivacy }) {
+export function Footer({ onNavigateDocs, onNavigatePrivacy, onNavigateTerms }) {
     const handleDocsClick = (e) => {
         if (onNavigateDocs) {
             e.preventDefault();
@@ -13,6 +13,13 @@ export function Footer({ onNavigateDocs, onNavigatePrivacy }) {
         if (onNavigatePrivacy) {
             e.preventDefault();
             onNavigatePrivacy('/privacy');
+        }
+    };
+
+    const handleTermsClick = (e) => {
+        if (onNavigateTerms) {
+            e.preventDefault();
+            onNavigateTerms('/terms');
         }
     };
 
@@ -83,7 +90,12 @@ export function Footer({ onNavigateDocs, onNavigatePrivacy }) {
                     >
                         Privacy Policy
                     </button>
-                    <span className="cursor-not-allowed hover:text-gray-400 transition-colors">Terms of Service</span>
+                    <button
+                        onClick={handleTermsClick}
+                        className="hover:text-blue-400 transition-colors"
+                    >
+                        Terms of Service
+                    </button>
                 </div>
             </div>
         </footer>
