@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { hashPhrase } from '../../services/adminService';
+import { apiCall } from '../../services/apiService';
 import { KeyRound, Mail, Eye, EyeOff, ArrowRight, Loader2, Search } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { Input, Label, Button } from '../../shared/ui';
@@ -35,13 +36,10 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
             // ── Find my groups (email only) ──────────────────────────────────────────
             if (tab === 'find') {
                 if (!findEmail) throw new Error('Please enter your email address.');
-                const res = await fetch('/api/find-groups', {
+                await apiCall('/api/find-groups', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: findEmail.trim().toLowerCase(), baseUrl: window.location.origin }),
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Search failed. Please try again.');
 
                 addNotification({
                     type: 'success',
@@ -64,16 +62,10 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                 body.email = email.trim().toLowerCase();
             }
 
-            const res = await fetch('/api/recover-admin', {
+            const data = await apiCall('/api/recover-admin', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body),
             });
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Recovery failed. Please check your details and try again.');
-            }
 
             if (tab === 'email') {
                 addNotification({

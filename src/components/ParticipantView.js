@@ -14,6 +14,7 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
   const { groupId } = useGroupContext();
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const { addNotification } = useNotification();
   const [participants, setParticipants] = useState([]);
   const [expandedSection, setExpandedSection] = useState('form');
@@ -36,16 +37,24 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
     };
 
     const unsubGroup = subscribeToGroup(groupId, (data) => {
+      setError('');
       if (data) {
         setGroup(data);
       } else {
         setGroup(null);
       }
       onLoad();
+    }, (err) => {
+      setError(err.message || 'Failed to load group data.');
+      onLoad();
     });
 
     const unsubParts = subscribeToParticipants(groupId, (data) => {
+      setError('');
       setParticipants(data || []);
+      onLoad();
+    }, (err) => {
+      setError(err.message || 'Failed to load participants.');
       onLoad();
     });
 
@@ -68,7 +77,14 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
           setParticipantDuration(String(participant.duration || '3'));
           setHeatmapDuration(String(participant.duration || '3'));
         }
-      } catch { }
+      } catch (err) {
+        console.error('[ParticipantView] Failed to restore participant:', err);
+        addNotification({
+          type: 'error',
+          title: 'Network Error',
+          message: 'Could not load your saved dates. Please check your connection or try again later.'
+        });
+      }
     };
     restore();
   }, [groupId, initialParticipantId]);
@@ -160,6 +176,20 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
 
   if (loading) {
     return <LoadingSpinner label="Loading..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card variant="danger" className="text-center max-w-md">
+          <h2 className="text-xl font-bold text-rose-400 mb-2">Access Denied</h2>
+          <p className="text-gray-300 mb-6 font-medium">{error}</p>
+          <Button variant="secondary" fullWidth onClick={onBack}>
+            Go Home
+          </Button>
+        </Card>
+      </div>
+    );
   }
 
   if (!group) {

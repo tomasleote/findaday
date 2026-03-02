@@ -25,8 +25,9 @@ export function useLocalStorage(key, defaultValue) {
           localStorage.setItem(key, JSON.stringify(valueToStore));
           return valueToStore;
         });
-      } catch {
-        // localStorage may be full or disabled — silently fail
+      } catch (err) {
+        // localStorage may be full or disabled — log warning
+        console.warn('[useLocalStorage] Failed to save to localStorage:', err);
       }
     },
     [key]
