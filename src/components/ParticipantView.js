@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { subscribeToGroup } from '../services/groupService';
 import { addParticipant, updateParticipant, getParticipant, subscribeToParticipants } from '../services/participantService';
-import { useCopyToClipboard } from '../hooks/useCopyToClipboard';
 import { getDatesBetween, calculateOverlap, getBestOverlapPeriods } from '../utils/overlap';
+import { ReadOnlyInput, CopyButton, Button, LoadingSpinner, Card } from '../shared/ui';
 import { useNotification } from '../context/NotificationContext';
 
 import CalendarView from './CalendarView';
@@ -157,11 +157,7 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl text-gray-400">Loading...</div>
-      </div>
-    );
+    return <LoadingSpinner label="Loading..." />;
   }
 
   if (!group) {
@@ -271,7 +267,6 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
 function ParticipantDashboard({ groupId, participantId, participantName, participantEmail, participantDuration, savedDays, group, onSubmit }) {
   const baseUrl = window.location.origin;
   const personalLink = `${baseUrl}?group=${groupId}&p=${participantId}`;
-  const { copy, copied } = useCopyToClipboard();
   const [updating, setUpdating] = useState(false);
 
   return (
@@ -285,17 +280,8 @@ function ParticipantDashboard({ groupId, participantId, participantName, partici
             Your personal link — save to edit later:
           </label>
           <div className="flex gap-2">
-            <input
-              readOnly
-              value={personalLink}
-              className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
-            />
-            <button
-              onClick={() => copy(personalLink)}
-              className="px-3 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg text-sm font-semibold transition-colors"
-            >
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
+            <ReadOnlyInput value={personalLink} />
+            <CopyButton value={personalLink} />
           </div>
         </div>
 
