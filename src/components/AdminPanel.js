@@ -33,7 +33,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
   const [adminEmail, setAdminEmail] = useState('');
   const [adminDuration, setAdminDuration] = useState('3');
   const [showAvailability, setShowAvailability] = useState(false);
-  const [availabilitySubmitted, setAvailabilitySubmitted] = useState(false);
+
 
   useEffect(() => {
     let unsubGroup = () => { };
@@ -170,8 +170,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       setAdminName(formData.name);
       setAdminEmail(formData.email || '');
       setAdminDuration(String(formData.duration));
-      setAvailabilitySubmitted(true);
-      setTimeout(() => setAvailabilitySubmitted(false), 3000);
+      addNotification({ type: 'success', title: 'Availability Saved', message: 'Your availability has been saved!' });
     } catch (err) {
       console.error('[Admin Auth Error] handleAdminAvailability failed:', err);
       addNotification({ type: 'error', title: 'Error', message: err.message });
@@ -190,6 +189,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       await updateGroup(groupId, updates);
       setGroup({ ...group, ...updates });
       setEditing(false);
+      addNotification({ type: 'success', title: 'Group Updated', message: 'Group settings have been saved.' });
     } catch (err) {
       console.error('[Admin Panel Error] handleSaveEdit failed:', err);
       addNotification({ type: 'error', title: 'Update Failed', message: err.message });
@@ -618,11 +618,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
             </p>
           )}
 
-          {availabilitySubmitted && (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg mb-4">
-              Your availability has been saved!
-            </div>
-          )}
+
 
           {showAvailability && (
             <CalendarView
