@@ -29,15 +29,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const database = getDatabase(app);
 
-// Produces a hex-encoded SHA-256 digest of a token using the browser's Web Crypto API.
-// The raw adminToken never enters the database — only this irreversible hash does.
-const hashAdminToken = async (token) => {
-  const data = new TextEncoder().encode(token);
+// Produces a hex-encoded SHA-256 digest using the browser's Web Crypto API.
+// Exported so RecoverAdminForm can hash passphrases client-side before sending.
+export const hashPhrase = async (text) => {
+  const data = new TextEncoder().encode(text);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   return Array.from(new Uint8Array(hashBuffer))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 };
+
+// Internal alias kept for clarity at call sites
+const hashAdminToken = hashPhrase;
 
 export const createGroup = async (groupData) => {
   try {
@@ -47,6 +50,9 @@ export const createGroup = async (groupData) => {
     const startDate = String(groupData.startDate || '').slice(0, 10);
     const endDate = String(groupData.endDate || '').slice(0, 10);
     const adminEmail = String(groupData.adminEmail || '').trim().slice(0, 255);
+    const recoveryPasswordHash = groupData.recoveryPasswordHash
+      ? String(groupData.recoveryPasswordHash).slice(0, 64)
+      : null;
 
     if (!name || !startDate || !endDate) {
       throw new Error('Name, start date, and end date are required.');
@@ -59,9 +65,7 @@ export const createGroup = async (groupData) => {
       throw new Error('Failed to generate admin token hash');
     }
     const groupRef = ref(database, `groups/${groupId}`);
-    // Store the hash of the admin token, never the raw token itself.
-    // The hash is safe to be public: SHA-256 of a UUID is computationally irreversible.
-    await set(groupRef, {
+    const groupPayload = {
       name,
       description,
       startDate,
@@ -69,8 +73,12 @@ export const createGroup = async (groupData) => {
       adminEmail,
       createdAt: new Date().toISOString(),
       id: groupId,
-      adminTokenHash
-    });
+      adminTokenHash,
+    };
+    if (recoveryPasswordHash) {
+      groupPayload.recoveryPasswordHash = recoveryPasswordHash;
+    }
+    await set(groupRef, groupPayload);
     return { groupId, adminToken };
   } catch (error) {
     console.error("Error creating group:", error);

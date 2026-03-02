@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { addParticipant, updateParticipant, getParticipant, subscribeToGroup, subscribeToParticipants } from '../firebase';
 import { getDatesBetween, calculateOverlap, getBestOverlapPeriods } from '../utils/overlap';
+import { useNotification } from '../context/NotificationContext';
 
 import CalendarView from './CalendarView';
 import SlidingOverlapCalendar from './SlidingOverlapCalendar';
@@ -9,8 +10,7 @@ import { ChevronDown, ChevronUp, CalendarRange, Users } from 'lucide-react';
 function ParticipantView({ groupId, participantId: initialParticipantId, onBack }) {
   const [group, setGroup] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const { addNotification } = useNotification();
   const [participants, setParticipants] = useState([]);
   const [expandedSection, setExpandedSection] = useState('form');
   const [currentParticipantId, setCurrentParticipantId] = useState(null);
@@ -32,10 +32,10 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
     };
 
     const unsubGroup = subscribeToGroup(groupId, (data) => {
-      if (!data) {
-        setError('Group not found');
-      } else {
+      if (data) {
         setGroup(data);
+      } else {
+        setGroup(null);
       }
       onLoad();
     });
@@ -70,7 +70,7 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
   }, [groupId, initialParticipantId]);
 
   useEffect(() => {
-    if (group && participants.length > 0) {
+    if (group && participants?.length > 0) {
       const results = calculateOverlap(
         participants,
         group.startDate,
@@ -86,7 +86,6 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
   const handleSubmit = async (formData) => {
     try {
       setLoading(true);
-      setError('');
 
       // The participants state is already updated via a real-time listener (subscribeToParticipants).
       // This ensures the `participants` array is always current for checks like duplication.
@@ -138,10 +137,18 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
       }
 
       setSavedDays(finalDays);
-      setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 3000);
+      addNotification({
+        type: 'success',
+        title: 'Success',
+        message: 'Your response has been recorded. Thank you!'
+      });
     } catch (err) {
-      setError(err.message);
+      console.error('[Participant Submission Error] handleSubmit failed:', err);
+      addNotification({
+        type: 'error',
+        title: 'Error',
+        message: err.message
+      });
     } finally {
       setLoading(false);
     }
@@ -158,8 +165,8 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
   if (!group) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-dark-900 rounded-xl border border-dark-700 p-8 max-w-md">
-          <p className="text-rose-400 mb-4">{error || 'Group not found'}</p>
+        <div className="bg-dark-900 rounded-xl border border-dark-700 p-8 max-w-md text-center">
+          <p className="text-rose-400 mb-6 font-medium">Group not found or could not be loaded.</p>
           <button
             onClick={onBack}
             className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg transition-colors"
@@ -190,21 +197,9 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
           <p className="text-gray-400 mb-4">Select your available dates for the vacation</p>
           <div className="flex gap-4 text-sm text-gray-400 flex-wrap">
             <span className="flex items-center gap-1.5"><CalendarRange size={16} className="text-gray-500" /> {group.startDate} to {group.endDate}</span>
-            <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants.length} people attending</span>
+            <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants?.length || 0} people attending</span>
           </div>
         </div>
-
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 px-4 py-3 rounded-lg mb-6">
-            {error}
-          </div>
-        )}
-
-        {submitted && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-3 rounded-lg mb-6">
-            ✓ Your response has been recorded. Thank you!
-          </div>
-        )}
 
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
@@ -237,10 +232,10 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
             <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 sticky top-4">
               <h3 className="text-lg font-bold text-gray-50 mb-4">Participants</h3>
               <div className="space-y-2 text-sm max-h-96 overflow-y-auto">
-                {participants.length === 0 ? (
+                {(!participants || participants.length === 0) ? (
                   <p className="text-gray-500">Be the first to join!</p>
                 ) : (
-                  participants.map((p, i) => (
+                  participants?.map((p, i) => (
                     <div key={i} className="bg-dark-800 rounded p-3 border-l-4 border-blue-500">
                       <p className="font-semibold text-gray-50">{p.name || 'Anonymous'}</p>
                       <p className="text-gray-400 text-xs">{p.duration}-day trip</p>
@@ -253,7 +248,7 @@ function ParticipantView({ groupId, participantId: initialParticipantId, onBack 
           </div>
         </div>
 
-        {overlaps.length > 0 && (
+        {overlaps?.length > 0 && (
           <div className="mt-8">
             <h2 className="text-xl font-bold text-gray-50 mb-4">Current Group Availability</h2>
             <SlidingOverlapCalendar
