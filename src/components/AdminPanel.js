@@ -479,217 +479,219 @@ function AdminPanel({ groupId, adminToken, onBack }) {
           <div className="w-20"></div>
         </div>
 
-        <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 mb-8">
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-50 mb-2">{group.name}</h2>
-              {group.description && (
-                <p className="text-gray-400 text-sm mb-3">{group.description}</p>
-              )}
-              <div className="flex gap-4 text-sm text-gray-400 flex-wrap mt-1">
-                <span className="flex items-center gap-1.5"><CalendarRange size={16} className="text-gray-500" /> {group.startDate} to {group.endDate}</span>
-                <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants?.length || 0} participants</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="md:col-span-2 md:row-span-2">
+            <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 h-full">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-50 mb-2">{group.name}</h2>
+                  {group.description && (
+                    <p className="text-gray-400 text-sm mb-3">{group.description}</p>
+                  )}
+                  <div className="flex gap-4 text-sm text-gray-400 flex-wrap mt-1">
+                    <span className="flex items-center gap-1.5"><CalendarRange size={16} className="text-gray-500" /> {group.startDate} to {group.endDate}</span>
+                    <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants?.length || 0} participants</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setEditing(!editing)}
+                  className="text-blue-400 hover:text-blue-300"
+                >
+                  {editing ? <X size={24} /> : <Edit size={24} />}
+                </button>
               </div>
+
+              {!editing && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1">
+                      Participant link (share this):
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        readOnly
+                        value={participantLink}
+                        className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
+                      />
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(participantLink);
+                          setCopiedPLink(true);
+                          setTimeout(() => setCopiedPLink(false), 2000);
+                        }}
+                        className="px-3 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg text-sm font-semibold transition-colors"
+                      >
+                        {copiedPLink ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                  {adminLink && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Your admin link (keep private):
+                      </label>
+                      <div className="flex gap-2 mb-3">
+                        <input
+                          readOnly
+                          value={adminLink}
+                          className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
+                        />
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(adminLink);
+                            setCopiedALink(true);
+                            setTimeout(() => setCopiedALink(false), 2000);
+                          }}
+                          className="px-3 py-2 bg-dark-700 hover:bg-dark-800 text-gray-300 rounded-lg text-sm font-semibold border border-dark-700 transition-colors"
+                        >
+                          {copiedALink ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                      <label className="block text-xs font-medium text-gray-400 mb-1">
+                        Group ID:
+                      </label>
+                      <div className="flex gap-2">
+                        <code className="flex-1 px-3 py-1.5 border border-dark-700 rounded-lg text-xs font-mono bg-dark-800 text-blue-400 flex items-center">
+                          {groupId}
+                        </code>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(groupId);
+                            setCopiedGroupId(true);
+                            setTimeout(() => setCopiedGroupId(false), 2000);
+                          }}
+                          className="px-3 py-1.5 bg-dark-700 hover:bg-dark-800 text-gray-300 rounded-lg text-xs font-semibold border border-dark-700 transition-colors flex items-center gap-1"
+                        >
+                          {copiedGroupId ? <CheckCircle2 size={14} className="text-blue-400" /> : <Copy size={14} />}
+                          {copiedGroupId ? 'Copied' : 'Copy ID'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <div className="border-t border-dark-700/50 mt-4 pt-3 flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recovery Options</span>
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <Mail size={16} className={group.adminEmail ? "text-blue-400" : "text-gray-600"} />
+                      <span className={group.adminEmail ? "text-gray-300" : "text-gray-500 italic"}>
+                        {group.adminEmail || "No admin email set"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <KeyRound size={16} className={group.recoveryPasswordHash ? "text-blue-400" : "text-gray-600"} />
+                      <span className={group.recoveryPasswordHash ? "text-gray-300" : "text-gray-500 italic"}>
+                        {group.recoveryPasswordHash ? "Passphrase is set" : "No passphrase set"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {editing && (
+                <div className="space-y-4 border-t border-dark-700 pt-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Group Name</label>
+                    <input
+                      type="text"
+                      value={editData.name}
+                      onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                      maxLength="30"
+                      className={inputClass}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      Description {(editData.description || '').length}/500
+                    </label>
+                    <textarea
+                      value={editData.description || ''}
+                      onChange={(e) => setEditData({ ...editData, description: e.target.value.slice(0, 500) })}
+                      className={inputClass}
+                      rows="2"
+                      maxLength="500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
+                      <input
+                        type="date"
+                        value={editData.startDate}
+                        onChange={(e) => setEditData({ ...editData, startDate: e.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">End Date</label>
+                      <input
+                        type="date"
+                        value={editData.endDate}
+                        onChange={(e) => setEditData({ ...editData, endDate: e.target.value })}
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t border-dark-700/50 pt-4 mt-2 space-y-4">
+                    <h3 className="text-sm font-semibold text-gray-300">Recovery Settings</h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">Admin Email</label>
+                      <input
+                        type="email"
+                        value={editData.adminEmail || ''}
+                        onChange={(e) => setEditData({ ...editData, adminEmail: e.target.value })}
+                        maxLength="30"
+                        className={inputClass}
+                        placeholder="your@email.com"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Used for password recovery and sending reminders.</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-1">Recovery Passphrase</label>
+                      <div className="relative">
+                        <input
+                          type={showPassphrase ? 'text' : 'password'}
+                          value={editData.newPassphrase || ''}
+                          onChange={(e) => setEditData({ ...editData, newPassphrase: e.target.value })}
+                          className={`${inputClass} pr-10`}
+                          placeholder={group.recoveryPasswordHash ? "Enter to change existing passphrase" : "Set a new passphrase"}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassphrase(s => !s)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                          aria-label={showPassphrase ? 'Hide passphrase' : 'Show passphrase'}
+                          aria-pressed={showPassphrase}
+                        >
+                          {showPassphrase ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Leave blank to keep existing.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      onClick={handleSaveEdit}
+                      className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Save size={18} /> Save
+                    </button>
+                    <button
+                      onClick={() => setEditing(false)}
+                      className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold py-2 px-4 rounded-lg border border-dark-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => setEditing(!editing)}
-              className="text-blue-400 hover:text-blue-300"
-            >
-              {editing ? <X size={24} /> : <Edit size={24} />}
-            </button>
           </div>
 
-          {!editing && (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1">
-                  Participant link (share this):
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    readOnly
-                    value={participantLink}
-                    className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
-                  />
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(participantLink);
-                      setCopiedPLink(true);
-                      setTimeout(() => setCopiedPLink(false), 2000);
-                    }}
-                    className="px-3 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg text-sm font-semibold transition-colors"
-                  >
-                    {copiedPLink ? 'Copied!' : 'Copy'}
-                  </button>
-                </div>
-              </div>
-              {adminLink && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">
-                    Your admin link (keep private):
-                  </label>
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      readOnly
-                      value={adminLink}
-                      className="flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300"
-                    />
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(adminLink);
-                        setCopiedALink(true);
-                        setTimeout(() => setCopiedALink(false), 2000);
-                      }}
-                      className="px-3 py-2 bg-dark-700 hover:bg-dark-800 text-gray-300 rounded-lg text-sm font-semibold border border-dark-700 transition-colors"
-                    >
-                      {copiedALink ? 'Copied!' : 'Copy'}
-                    </button>
-                  </div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">
-                    Group ID:
-                  </label>
-                  <div className="flex gap-2">
-                    <code className="flex-1 px-3 py-1.5 border border-dark-700 rounded-lg text-xs font-mono bg-dark-800 text-blue-400 flex items-center">
-                      {groupId}
-                    </code>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(groupId);
-                        setCopiedGroupId(true);
-                        setTimeout(() => setCopiedGroupId(false), 2000);
-                      }}
-                      className="px-3 py-1.5 bg-dark-700 hover:bg-dark-800 text-gray-300 rounded-lg text-xs font-semibold border border-dark-700 transition-colors flex items-center gap-1"
-                    >
-                      {copiedGroupId ? <CheckCircle2 size={14} className="text-blue-400" /> : <Copy size={14} />}
-                      {copiedGroupId ? 'Copied' : 'Copy ID'}
-                    </button>
-                  </div>
-                </div>
-              )}
-              <div className="border-t border-dark-700/50 mt-4 pt-3 flex flex-col gap-2">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Recovery Options</span>
-                <div className="flex items-center gap-1.5 text-sm">
-                  <Mail size={16} className={group.adminEmail ? "text-blue-400" : "text-gray-600"} />
-                  <span className={group.adminEmail ? "text-gray-300" : "text-gray-500 italic"}>
-                    {group.adminEmail || "No admin email set"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-sm">
-                  <KeyRound size={16} className={group.recoveryPasswordHash ? "text-blue-400" : "text-gray-600"} />
-                  <span className={group.recoveryPasswordHash ? "text-gray-300" : "text-gray-500 italic"}>
-                    {group.recoveryPasswordHash ? "Passphrase is set" : "No passphrase set"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {editing && (
-            <div className="space-y-4 border-t border-dark-700 pt-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Group Name</label>
-                <input
-                  type="text"
-                  value={editData.name}
-                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                  maxLength="30"
-                  className={inputClass}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Description {(editData.description || '').length}/500
-                </label>
-                <textarea
-                  value={editData.description || ''}
-                  onChange={(e) => setEditData({ ...editData, description: e.target.value.slice(0, 500) })}
-                  className={inputClass}
-                  rows="2"
-                  maxLength="500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={editData.startDate}
-                    onChange={(e) => setEditData({ ...editData, startDate: e.target.value })}
-                    className={inputClass}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={editData.endDate}
-                    onChange={(e) => setEditData({ ...editData, endDate: e.target.value })}
-                    className={inputClass}
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-dark-700/50 pt-4 mt-2 space-y-4">
-                <h3 className="text-sm font-semibold text-gray-300">Recovery Settings</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Admin Email</label>
-                  <input
-                    type="email"
-                    value={editData.adminEmail || ''}
-                    onChange={(e) => setEditData({ ...editData, adminEmail: e.target.value })}
-                    maxLength="30"
-                    className={inputClass}
-                    placeholder="your@email.com"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Used for password recovery and sending reminders.</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">Recovery Passphrase</label>
-                  <div className="relative">
-                    <input
-                      type={showPassphrase ? 'text' : 'password'}
-                      value={editData.newPassphrase || ''}
-                      onChange={(e) => setEditData({ ...editData, newPassphrase: e.target.value })}
-                      className={`${inputClass} pr-10`}
-                      placeholder={group.recoveryPasswordHash ? "Enter to change existing passphrase" : "Set a new passphrase"}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassphrase(s => !s)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
-                      aria-label={showPassphrase ? 'Hide passphrase' : 'Show passphrase'}
-                      aria-pressed={showPassphrase}
-                    >
-                      {showPassphrase ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Leave blank to keep existing.</p>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <button
-                  onClick={handleSaveEdit}
-                  className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
-                >
-                  <Save size={18} /> Save
-                </button>
-                <button
-                  onClick={() => setEditing(false)}
-                  className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold py-2 px-4 rounded-lg border border-dark-700 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-dark-900 rounded-xl border border-dark-700 p-6">
+          <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 h-full">
             <h3 className="font-semibold text-gray-300 mb-4">Actions</h3>
             <div className="space-y-2">
               <button
@@ -716,7 +718,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
             </div>
           </div>
 
-          <div className="bg-dark-900 rounded-xl border border-dark-700 p-6">
+          <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 h-full">
             <h3 className="font-semibold text-gray-300 mb-4">Statistics</h3>
             <div className="space-y-2 text-sm text-gray-300">
               <p>Total participants: <span className="font-bold">{participants?.length || 0}</span></p>
