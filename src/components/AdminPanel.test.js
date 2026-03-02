@@ -368,13 +368,15 @@ describe('Copy Link', () => {
 
         fireEvent.click(screen.getByTestId('copy-link-p1'));
 
-        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-            expect.stringContaining('group=group-123&p=p1')
-        );
-        expect(mockAddNotification).toHaveBeenCalledWith(expect.objectContaining({
-            type: 'success',
-            title: 'Link Copied',
-        }));
+        await waitFor(() => {
+            expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+                expect.stringContaining('group=group-123&p=p1')
+            );
+            expect(mockAddNotification).toHaveBeenCalledWith(expect.objectContaining({
+                type: 'success',
+                title: 'Link Copied',
+            }));
+        });
     });
 });
 
