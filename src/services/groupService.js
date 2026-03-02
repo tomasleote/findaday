@@ -77,12 +77,13 @@ export const deleteGroup = async (groupId) => {
   }
 };
 
-export const subscribeToGroup = (groupId, callback) => {
+export const subscribeToGroup = (groupId, callback, onError) => {
   const groupRef = ref(database, `groups/${groupId}`);
   const unsubscribe = onValue(groupRef, (snapshot) => {
     callback(snapshot.exists() ? snapshot.val() : null);
   }, (error) => {
     console.error("Group sync error:", error);
+    if (onError) onError(error);
   });
   return unsubscribe;
 };

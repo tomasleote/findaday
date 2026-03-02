@@ -77,11 +77,19 @@ export function useGroupData(groupId, adminToken, onBack) {
           setEditData({});
         }
         onLoad();
+      }, (err) => {
+        if (!isMounted) return;
+        setError(err.message || 'Failed to load group data.');
+        onLoad();
       });
 
       unsubParts = subscribeToParticipants(groupId, (data) => {
         if (!isMounted) return;
         setParticipants(data || []);
+        onLoad();
+      }, (err) => {
+        if (!isMounted) return;
+        setError(err.message || 'Failed to load participants.');
         onLoad();
       });
     };
