@@ -70,7 +70,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Email service is not configured' });
   }
 
-  const { email, baseUrl } = req.body ?? {};
+  const { email } = req.body ?? {};
   if (!email || !email.includes('@')) {
     return res.status(400).json({ error: 'A valid email address is required' });
   }
@@ -79,7 +79,8 @@ module.exports = async function handler(req, res) {
   const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
 
   if (isRateLimited(ip, targetEmail)) {
-    console.warn(`[find-groups] Rate limit exceeded for IP ${ip} or email ${targetEmail}`);
+    const hashedEmail = crypto.createHash('sha256').update(targetEmail).digest('hex').substring(0, 8);
+    console.warn(`[find-groups] Rate limit exceeded for email hash ${hashedEmail}`);
     return res.status(200).json({ found: 0 });
   }
 
@@ -92,7 +93,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to search groups' });
   }
 
-  const origin = baseUrl || req.headers.origin || 'https://vacation-scheduler.vercel.app';
+  const origin = process.env.APP_BASE_URL || (req.headers['x-forwarded-host'] ? 'https://' + req.headers['x-forwarded-host'] : req.headers.referer?.replace(/\/$/, '') || 'https://vacation-scheduler.vercel.app');
 
   const matches = Object.values(allGroups || {}).filter(
     (g) => g && g.adminEmail && g.adminEmail.trim().toLowerCase() === targetEmail
@@ -101,15 +102,16 @@ module.exports = async function handler(req, res) {
   // Always respond with success to prevent email enumeration attacks
   if (matches.length === 0) {
     // Send a "no groups found" email anyway so the UX feels consistent
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD },
-    });
-    await transporter.sendMail({
-      from: `"Vacation Scheduler" <${process.env.EMAIL_USER}>`,
-      to: targetEmail,
-      subject: 'No groups found for your email — Vacation Scheduler',
-      html: `
+    try {
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD },
+      });
+      await transporter.sendMail({
+        from: `"Vacation Scheduler" <${process.env.EMAIL_USER}>`,
+        to: targetEmail,
+        subject: 'No groups found for your email — Vacation Scheduler',
+        html: `
         <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;background:#0f172a;color:#f8fafc;border-radius:12px;overflow:hidden;">
           <div style="background:#1e3a5f;padding:28px 28px 20px;">
             <h1 style="margin:0;font-size:20px;font-weight:700;color:#60a5fa;">Vacation Scheduler</h1>
@@ -119,7 +121,10 @@ module.exports = async function handler(req, res) {
             <p style="color:#94a3b8;font-size:13px;">If you used a different email when creating your group, try that address instead.</p>
           </div>
         </div>`,
-    });
+      });
+    } catch (err) {
+      console.error('[find-groups] Failed to send no-match email:', err.message);
+    }
     return res.status(200).json({ found: 0 });
   }
 

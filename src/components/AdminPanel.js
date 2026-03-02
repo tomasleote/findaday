@@ -122,6 +122,8 @@ function AdminPanel({ groupId, adminToken, onBack }) {
         parseInt(durationFilter)
       );
       setOverlaps(results);
+    } else {
+      setOverlaps([]);
     }
   }, [group, participants, durationFilter]);
 
@@ -225,7 +227,7 @@ function AdminPanel({ groupId, adminToken, onBack }) {
           groupId,
           groupName: group.name,
           startDate: group.startDate,
-          participants: participants?.map(p => ({ email: p.email })) || [],
+          participants: participants?.filter(p => p?.email && p.email.trim() !== '').map(p => ({ email: p.email })) || [],
           baseUrl: window.location.origin,
         })
       });
@@ -506,9 +508,9 @@ function AdminPanel({ groupId, adminToken, onBack }) {
               </button>
               <button
                 onClick={handleSendReminder}
-                disabled={reminderSending || !participants?.some(p => p.email)}
+                disabled={reminderSending || !participants?.some(p => p?.email && p.email.trim() !== '')}
                 className="w-full bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
-                title={!participants?.some(p => p.email) ? 'No participants have an email address' : ''}
+                title={!participants?.some(p => p?.email && p.email.trim() !== '') ? 'No participants have an email address' : ''}
               >
                 <Mail size={18} /> {reminderSending ? 'Sending...' : 'Send Reminder'}
               </button>
