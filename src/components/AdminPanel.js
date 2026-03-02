@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { getGroup, updateGroup, getParticipants, deleteGroup, addParticipant, updateParticipant, getParticipant, validateAdminToken, subscribeToGroup, subscribeToParticipants, hashPhrase } from '../firebase';
+import { getGroup, updateGroup, getParticipants, deleteGroup, addParticipant, updateParticipant, deleteParticipant, getParticipant, validateAdminToken, subscribeToGroup, subscribeToParticipants, hashPhrase } from '../firebase';
 import { calculateOverlap, getBestOverlapPeriods, formatDateRange } from '../utils/overlap';
 import { exportToCSV } from '../utils/export';
-import { CalendarRange, Users, Mail, Copy, CheckCircle2, ChevronDown, ChevronUp, Edit, X, Trash2, Download, Save, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { validateParticipantName, validateEmail, sanitizeName, sanitizeEmail, generateParticipantLink } from '../utils/participantValidation';
+import { CalendarRange, Users, Mail, Copy, CheckCircle2, ChevronDown, ChevronUp, Edit, X, Trash2, Download, Save, KeyRound, Eye, EyeOff, UserPlus, Link, Send } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 import SlidingOverlapCalendar from './SlidingOverlapCalendar';
 import CalendarView from './CalendarView';
@@ -33,6 +34,25 @@ function AdminPanel({ groupId, adminToken, onBack }) {
   const [adminEmail, setAdminEmail] = useState('');
   const [adminDuration, setAdminDuration] = useState('3');
   const [showAvailability, setShowAvailability] = useState(false);
+
+  // Participant management state
+  const [showCreateParticipant, setShowCreateParticipant] = useState(false);
+  const [newParticipantName, setNewParticipantName] = useState('');
+  const [newParticipantEmail, setNewParticipantEmail] = useState('');
+  const [createLoading, setCreateLoading] = useState(false);
+
+  const [showEditParticipant, setShowEditParticipant] = useState(false);
+  const [editingParticipant, setEditingParticipant] = useState(null);
+  const [editParticipantName, setEditParticipantName] = useState('');
+  const [editParticipantEmail, setEditParticipantEmail] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingParticipant, setDeletingParticipant] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [inviteSendingId, setInviteSendingId] = useState(null);
+  const [copiedLinkId, setCopiedLinkId] = useState(null);
 
 
   useEffect(() => {
@@ -255,6 +275,167 @@ function AdminPanel({ groupId, adminToken, onBack }) {
       });
     } finally {
       setReminderSending(false);
+    }
+  };
+
+  // ─── Participant Management Handlers ─────────────────────────────
+
+  const handleCreateParticipant = async () => {
+    const name = sanitizeName(newParticipantName);
+    const email = sanitizeEmail(newParticipantEmail);
+
+    const nameCheck = validateParticipantName(name, participants);
+    if (!nameCheck.valid) {
+      addNotification({ type: 'error', title: 'Validation Error', message: nameCheck.error });
+      return;
+    }
+    if (email) {
+      const emailCheck = validateEmail(email);
+      if (!emailCheck.valid) {
+        addNotification({ type: 'error', title: 'Validation Error', message: emailCheck.error });
+        return;
+      }
+    }
+
+    setCreateLoading(true);
+    // Optimistic: create a temporary participant entry
+    const tempId = 'temp-' + Date.now();
+    const tempParticipant = { id: tempId, name, email, duration: 3, availableDays: [], createdAt: new Date().toISOString() };
+    setParticipants(prev => [...prev, tempParticipant]);
+
+    try {
+      await addParticipant(groupId, { name, email, duration: 3, availableDays: [] });
+      addNotification({ type: 'success', title: 'Participant Created', message: `${name} has been added to the group.` });
+      setShowCreateParticipant(false);
+      setNewParticipantName('');
+      setNewParticipantEmail('');
+      // Real data will arrive via the real-time subscription, remove temp entry
+      setParticipants(prev => prev.filter(p => p.id !== tempId));
+    } catch (err) {
+      console.error('[Admin Panel] handleCreateParticipant failed:', err);
+      // Rollback optimistic update
+      setParticipants(prev => prev.filter(p => p.id !== tempId));
+      addNotification({ type: 'error', title: 'Create Failed', message: err.message });
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const openEditParticipant = (participant) => {
+    setEditingParticipant(participant);
+    setEditParticipantName(participant.name || '');
+    setEditParticipantEmail(participant.email || '');
+    setShowEditParticipant(true);
+  };
+
+  const handleEditParticipant = async () => {
+    if (!editingParticipant) return;
+    const name = sanitizeName(editParticipantName);
+    const email = sanitizeEmail(editParticipantEmail);
+
+    const nameCheck = validateParticipantName(name, participants, editingParticipant.id);
+    if (!nameCheck.valid) {
+      addNotification({ type: 'error', title: 'Validation Error', message: nameCheck.error });
+      return;
+    }
+    if (email) {
+      const emailCheck = validateEmail(email);
+      if (!emailCheck.valid) {
+        addNotification({ type: 'error', title: 'Validation Error', message: emailCheck.error });
+        return;
+      }
+    }
+
+    setEditLoading(true);
+    const originalParticipants = [...participants];
+    // Optimistic update
+    setParticipants(prev =>
+      prev.map(p => p.id === editingParticipant.id ? { ...p, name, email } : p)
+    );
+
+    try {
+      await updateParticipant(groupId, editingParticipant.id, { name, email });
+      addNotification({ type: 'success', title: 'Participant Updated', message: `${name}'s details have been saved.` });
+      setShowEditParticipant(false);
+      setEditingParticipant(null);
+    } catch (err) {
+      console.error('[Admin Panel] handleEditParticipant failed:', err);
+      // Rollback
+      setParticipants(originalParticipants);
+      addNotification({ type: 'error', title: 'Update Failed', message: err.message });
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const openDeleteConfirmation = (participant) => {
+    setDeletingParticipant(participant);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteParticipant = async () => {
+    if (!deletingParticipant) return;
+
+    setDeleteLoading(true);
+    const originalParticipants = [...participants];
+    const deletedName = deletingParticipant.name || 'Participant';
+    // Optimistic removal
+    setParticipants(prev => prev.filter(p => p.id !== deletingParticipant.id));
+
+    try {
+      await deleteParticipant(groupId, deletingParticipant.id);
+      addNotification({ type: 'success', title: 'Participant Deleted', message: `${deletedName} has been removed from the group.` });
+      setShowDeleteConfirm(false);
+      setDeletingParticipant(null);
+    } catch (err) {
+      console.error('[Admin Panel] handleDeleteParticipant failed:', err);
+      // Rollback
+      setParticipants(originalParticipants);
+      addNotification({ type: 'error', title: 'Delete Failed', message: err.message });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleCopyParticipantLink = (participant) => {
+    const link = generateParticipantLink(baseUrl, groupId, participant.id);
+    navigator.clipboard.writeText(link);
+    setCopiedLinkId(participant.id);
+    addNotification({ type: 'success', title: 'Link Copied', message: `Personal link for ${participant.name} copied to clipboard.` });
+    setTimeout(() => setCopiedLinkId(null), 2000);
+  };
+
+  const handleSendInvite = async (participant) => {
+    if (!participant.email || !participant.email.trim()) {
+      addNotification({ type: 'warning', title: 'No Email', message: `${participant.name} doesn't have an email address.` });
+      return;
+    }
+
+    setInviteSendingId(participant.id);
+    try {
+      const response = await fetch('/api/send-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participantName: participant.name,
+          participantEmail: participant.email,
+          groupId,
+          groupName: group.name,
+          participantId: participant.id,
+          baseUrl: window.location.origin,
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        addNotification({ type: 'success', title: 'Invite Sent', message: `Invitation email sent to ${participant.email}.` });
+      } else {
+        addNotification({ type: 'error', title: 'Invite Failed', message: data.error || 'Failed to send invite email.' });
+      }
+    } catch (err) {
+      console.error('[Admin Panel] handleSendInvite failed:', err);
+      addNotification({ type: 'error', title: 'Network Error', message: 'Failed to send invite. Check your connection.' });
+    } finally {
+      setInviteSendingId(null);
     }
   };
 
@@ -548,7 +729,65 @@ function AdminPanel({ groupId, adminToken, onBack }) {
         </div>
 
         <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 mb-8">
-          <h3 className="text-xl font-bold text-gray-50 mb-4">Participants ({participants?.length || 0})</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-gray-50">Participants ({participants?.length || 0})</h3>
+            <button
+              onClick={() => setShowCreateParticipant(s => !s)}
+              className="bg-blue-500 hover:bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg text-sm flex items-center gap-2 transition-colors"
+            >
+              <UserPlus size={16} /> Add Participant
+            </button>
+          </div>
+
+          {/* Create Participant inline form */}
+          {showCreateParticipant && (
+            <div className="bg-dark-800 border border-dark-700 rounded-lg p-4 mb-4">
+              <h4 className="text-sm font-semibold text-gray-300 mb-3">New Participant</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Name *</label>
+                  <input
+                    type="text"
+                    value={newParticipantName}
+                    onChange={(e) => setNewParticipantName(e.target.value)}
+                    placeholder="Participant name"
+                    maxLength="100"
+                    className={inputClass}
+                    data-testid="create-participant-name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">Email (optional)</label>
+                  <input
+                    type="email"
+                    value={newParticipantEmail}
+                    onChange={(e) => setNewParticipantEmail(e.target.value)}
+                    placeholder="email@example.com"
+                    maxLength="255"
+                    className={inputClass}
+                    data-testid="create-participant-email"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCreateParticipant}
+                  disabled={createLoading || !newParticipantName.trim()}
+                  className="bg-blue-500 hover:bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg text-sm disabled:opacity-50 transition-colors flex items-center gap-1.5"
+                  data-testid="create-participant-submit"
+                >
+                  {createLoading ? 'Adding...' : 'Add'}
+                </button>
+                <button
+                  onClick={() => { setShowCreateParticipant(false); setNewParticipantName(''); setNewParticipantEmail(''); }}
+                  className="bg-dark-700 hover:bg-dark-600 text-gray-300 font-semibold py-2 px-4 rounded-lg text-sm border border-dark-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-dark-800 border-b border-dark-700">
@@ -557,21 +796,59 @@ function AdminPanel({ groupId, adminToken, onBack }) {
                   <th className="px-4 py-2 text-left text-gray-300">Email</th>
                   <th className="px-4 py-2 text-left text-gray-300">Duration</th>
                   <th className="px-4 py-2 text-left text-gray-300">Days Available</th>
+                  <th className="px-4 py-2 text-right text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {participants?.map((p, i) => (
-                  <tr key={i} className="border-b border-dark-700 hover:bg-dark-800">
+                {participants?.map((p) => (
+                  <tr key={p.id || p.name} className="border-b border-dark-700 hover:bg-dark-800 group">
                     <td className="px-4 py-2 text-gray-300">{p.name || 'N/A'}</td>
-                    <td className="px-4 py-2 text-gray-300">{p.email || 'N/A'}</td>
-                    <td className="px-4 py-2 text-gray-300">{p.duration} days</td>
+                    <td className="px-4 py-2 text-gray-300">{p.email || <span className="text-gray-500 italic">No email</span>}</td>
+                    <td className="px-4 py-2 text-gray-300">{p.duration || 0} days</td>
                     <td className="px-4 py-2 text-gray-300">{(p.availableDays || []).length}</td>
+                    <td className="px-4 py-2 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => openEditParticipant(p)}
+                          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors"
+                          title="Edit participant"
+                          data-testid={`edit-participant-${p.id}`}
+                        >
+                          <Edit size={15} />
+                        </button>
+                        <button
+                          onClick={() => openDeleteConfirmation(p)}
+                          className="p-1.5 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors"
+                          title="Delete participant"
+                          data-testid={`delete-participant-${p.id}`}
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleCopyParticipantLink(p)}
+                          className="p-1.5 text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors"
+                          title="Copy personal link"
+                          data-testid={`copy-link-${p.id}`}
+                        >
+                          {copiedLinkId === p.id ? <CheckCircle2 size={15} className="text-emerald-400" /> : <Link size={15} />}
+                        </button>
+                        <button
+                          onClick={() => handleSendInvite(p)}
+                          disabled={!p.email || !p.email.trim() || inviteSendingId === p.id}
+                          className="p-1.5 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title={!p.email || !p.email.trim() ? 'No email address' : 'Send invite email'}
+                          data-testid={`send-invite-${p.id}`}
+                        >
+                          {inviteSendingId === p.id ? <Mail size={15} className="animate-pulse" /> : <Send size={15} />}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {(!participants || participants.length === 0) && (
                   <tr>
-                    <td colSpan="4" className="px-4 py-4 text-center text-gray-500">
-                      No participants yet. Share the participant link above!
+                    <td colSpan="5" className="px-4 py-4 text-center text-gray-500">
+                      No participants yet. Click "Add Participant" or share the participant link above!
                     </td>
                   </tr>
                 )}
@@ -579,6 +856,95 @@ function AdminPanel({ groupId, adminToken, onBack }) {
             </table>
           </div>
         </div>
+
+        {/* Edit Participant Modal */}
+        {showEditParticipant && editingParticipant && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setShowEditParticipant(false); setEditingParticipant(null); }}>
+            <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-50">Edit Participant</h2>
+                <button onClick={() => { setShowEditParticipant(false); setEditingParticipant(null); }} className="text-gray-500 hover:text-gray-300 transition-colors" aria-label="Close modal">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Name *</label>
+                  <input
+                    type="text"
+                    value={editParticipantName}
+                    onChange={(e) => setEditParticipantName(e.target.value)}
+                    maxLength="100"
+                    className={inputClass}
+                    data-testid="edit-participant-name-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={editParticipantEmail}
+                    onChange={(e) => setEditParticipantEmail(e.target.value)}
+                    maxLength="255"
+                    className={inputClass}
+                    data-testid="edit-participant-email-input"
+                  />
+                </div>
+                <p className="text-xs text-gray-500">Note: Participant availability can only be changed by the participant themselves.</p>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={handleEditParticipant}
+                    disabled={editLoading || !editParticipantName.trim()}
+                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                    data-testid="edit-participant-save"
+                  >
+                    <Save size={18} /> {editLoading ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => { setShowEditParticipant(false); setEditingParticipant(null); }}
+                    className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold py-2 px-4 rounded-lg border border-dark-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && deletingParticipant && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => { setShowDeleteConfirm(false); setDeletingParticipant(null); }}>
+            <div className="bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-500/10 text-rose-400 mb-4">
+                  <Trash2 size={24} />
+                </div>
+                <h2 className="text-xl font-bold text-gray-50 mb-2">Delete Participant?</h2>
+                <p className="text-gray-400 text-sm">
+                  Are you sure you want to remove <strong className="text-gray-200">{deletingParticipant.name}</strong> from this group? This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowDeleteConfirm(false); setDeletingParticipant(null); }}
+                  className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold py-2 px-4 rounded-lg border border-dark-700 transition-colors"
+                  data-testid="delete-cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteParticipant}
+                  disabled={deleteLoading}
+                  className="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
+                  data-testid="delete-confirm"
+                >
+                  {deleteLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {overlaps?.length > 0 && (
           <div className="mb-8">
