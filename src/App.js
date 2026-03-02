@@ -244,7 +244,7 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
                 <h2 className="text-xl font-bold text-gray-50">
                   {showCreate ? 'Create a Trip' : showJoin ? 'Join a Trip' : 'Recover Admin Access'}
                 </h2>
-                <button onClick={closeAll} className="text-gray-500 hover:text-gray-300 transition-colors">
+                <button onClick={closeAll} className="text-gray-500 hover:text-gray-300 transition-colors" aria-label="Close modal">
                   <X size={20} />
                 </button>
               </div>

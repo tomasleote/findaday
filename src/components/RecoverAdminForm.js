@@ -187,7 +187,7 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            maxLength="30"
+                            maxLength="254"
                             className={inputClass}
                             placeholder="The email you used when creating the group"
                         />
@@ -211,7 +211,7 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                                 value={findEmail}
                                 onChange={(e) => setFindEmail(e.target.value)}
                                 required
-                                maxLength="30"
+                                maxLength="254"
                                 className={inputClass}
                                 placeholder="The email you used when creating groups"
                             />
