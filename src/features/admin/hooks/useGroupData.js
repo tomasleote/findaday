@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { subscribeToGroup } from '../../../services/groupService';
 import { getParticipant, subscribeToParticipants } from '../../../services/participantService';
 import { validateAdminToken } from '../../../services/adminService';
@@ -11,7 +11,6 @@ export function useGroupData(groupId, adminToken, onBack) {
   const [error, setError] = useState('');
   const [editData, setEditData] = useState({});
   const [durationFilter, setDurationFilter] = useState('3');
-  const [overlaps, setOverlaps] = useState([]);
 
   // Admin participant state
   const [adminParticipantId, setAdminParticipantId] = useState(null);
@@ -21,8 +20,8 @@ export function useGroupData(groupId, adminToken, onBack) {
   const [adminDuration, setAdminDuration] = useState('3');
 
   useEffect(() => {
-    let unsubGroup = () => {};
-    let unsubParts = () => {};
+    let unsubGroup = () => { };
+    let unsubParts = () => { };
     let isMounted = true;
 
     const initAdmin = async () => {
@@ -45,7 +44,7 @@ export function useGroupData(groupId, adminToken, onBack) {
       if (!isMounted) return;
 
       if (adminToken) {
-        try { localStorage.setItem(`vacation_admin_${groupId}`, adminToken); } catch {}
+        try { localStorage.setItem(`vacation_admin_${groupId}`, adminToken); } catch { }
       }
 
       try {
@@ -60,9 +59,9 @@ export function useGroupData(groupId, adminToken, onBack) {
               setAdminEmail(p.email || email || '');
               setAdminDuration(String(p.duration || duration || '3'));
             }
-          }).catch(() => {});
+          }).catch(() => { });
         }
-      } catch {}
+      } catch { }
 
       let initialLoads = 2;
       const onLoad = () => {
@@ -99,18 +98,16 @@ export function useGroupData(groupId, adminToken, onBack) {
     };
   }, [groupId, adminToken]);
 
-  useEffect(() => {
+  const overlaps = useMemo(() => {
     if (group && participants?.length > 0) {
-      const results = calculateOverlap(
+      return calculateOverlap(
         participants,
         group.startDate,
         group.endDate,
         parseInt(durationFilter)
       );
-      setOverlaps(results);
-    } else {
-      setOverlaps([]);
     }
+    return [];
   }, [group, participants, durationFilter]);
 
   return {
