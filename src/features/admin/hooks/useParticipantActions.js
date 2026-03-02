@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { addParticipant, updateParticipant, deleteParticipant } from '../../../services/participantService';
 import { validateParticipantName, validateEmail, sanitizeName, sanitizeEmail, generateParticipantLink } from '../../../utils/participantValidation';
+import { apiCall } from '../../../services/apiService';
 import { useNotification } from '../../../context/NotificationContext';
 
 export function useParticipantActions(groupId, group, participants, setParticipants) {
@@ -189,9 +190,8 @@ export function useParticipantActions(groupId, group, participants, setParticipa
 
     setInviteSendingId(participant.id);
     try {
-      const response = await fetch('/api/send-invite', {
+      await apiCall('/api/send-invite', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           participantName: participant.name,
           participantEmail: participant.email,
@@ -201,19 +201,10 @@ export function useParticipantActions(groupId, group, participants, setParticipa
           baseUrl: window.location.origin,
         })
       });
-      const data = await response.json();
-      if (response.ok) {
-        addNotification({ type: 'success', title: 'Invite Sent', message: `Invitation email sent to ${participant.email}.` });
-      } else {
-        addNotification({ type: 'error', title: 'Invite Failed', message: data.error || 'Failed to send invite email.' });
-      }
+      addNotification({ type: 'success', title: 'Invite Sent', message: `Invitation email sent to ${participant.email}.` });
     } catch (err) {
       console.error('[Admin Panel] handleSendInvite failed:', err);
-      if (err.message === 'Failed to fetch') {
-        addNotification({ type: 'error', title: 'Network Error', message: 'You appear to be offline. Failed to send invite.' });
-      } else {
-        addNotification({ type: 'error', title: 'Invite Failed', message: err.message || 'Failed to send invite.' });
-      }
+      addNotification({ type: 'error', title: 'Invite Failed', message: err.message || 'Failed to send invite.' });
     } finally {
       setInviteSendingId(null);
     }

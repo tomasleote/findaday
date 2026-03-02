@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { KeyRound, Eye, EyeOff } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { Input, Textarea, Label, Button, Card } from '../../shared/ui';
+import { apiCall } from '../../services/apiService';
 import { MAX_GROUP_NAME_LENGTH } from '../../utils/constants/validation';
 
 function CreateGroupForm({ onSuccess, onCancel }) {
@@ -31,9 +32,8 @@ function CreateGroupForm({ onSuccess, onCancel }) {
       const result = await createGroup({ name, description, startDate, endDate, adminEmail, recoveryPasswordHash });
       // Best-effort welcome email — does not block group creation
       if (adminEmail) {
-        fetch('/api/send-welcome', {
+        apiCall('/api/send-welcome', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             groupId: result.groupId,
             adminToken: result.adminToken,
