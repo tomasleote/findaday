@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { KeyRound, Eye, EyeOff } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { Input, Textarea, Label, Button, Card } from '../../shared/ui';
+import { MAX_GROUP_NAME_LENGTH } from '../../utils/constants/validation';
 
 function CreateGroupForm({ onSuccess, onCancel }) {
   const [name, setName] = useState('');
@@ -16,6 +17,12 @@ function CreateGroupForm({ onSuccess, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (new Date(endDate) < new Date(startDate)) {
+      addNotification({ type: 'error', message: 'End Date cannot be before Start Date.' });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -56,7 +63,7 @@ function CreateGroupForm({ onSuccess, onCancel }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          maxLength="30"
+          maxLength={MAX_GROUP_NAME_LENGTH}
           placeholder="e.g., Summer Trip 2024"
         />
       </div>
@@ -111,7 +118,7 @@ function CreateGroupForm({ onSuccess, onCancel }) {
           type="email"
           value={adminEmail}
           onChange={(e) => setAdminEmail(e.target.value)}
-          maxLength="30"
+          maxLength="254"
           placeholder="your@email.com"
         />
       </div>

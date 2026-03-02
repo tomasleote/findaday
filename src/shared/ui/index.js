@@ -1,7 +1,8 @@
 export { default as Modal } from './Modal';
-export { Input, Textarea, Label, ReadOnlyInput } from './Input';
+export { default as Input, ReadOnlyInput, Label, Textarea } from './Input';
 export { default as Button } from './Button';
 export { default as CopyButton } from './CopyButton';
 export { default as ConfirmDialog } from './ConfirmDialog';
-export { LoadingSpinner } from './LoadingSpinner';
-export { Card } from './Card';
+export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as Card } from './Card';
+export { default as TruncatedText } from './TruncatedText';

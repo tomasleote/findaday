@@ -43,9 +43,7 @@ export function useGroupData(groupId, adminToken, onBack) {
 
       if (!isMounted) return;
 
-      if (adminToken) {
-        try { localStorage.setItem(`vacation_admin_${groupId}`, adminToken); } catch { }
-      }
+      try { localStorage.setItem(`vacation_admin_${groupId}`, adminToken); } catch { }
 
       try {
         const stored = localStorage.getItem(`vacation_admin_p_${groupId}`);
@@ -96,7 +94,7 @@ export function useGroupData(groupId, adminToken, onBack) {
       unsubGroup();
       unsubParts();
     };
-  }, [groupId, adminToken]);
+  }, [groupId, adminToken, onBack]);
 
   const overlaps = useMemo(() => {
     if (group && participants?.length > 0) {

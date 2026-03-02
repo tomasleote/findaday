@@ -1,6 +1,7 @@
 import React from 'react';
 import { Edit, Trash2, CheckCircle2, Link, Send, Mail, UserPlus, Save } from 'lucide-react';
-import { Modal, Input, Label, ConfirmDialog } from '../../shared/ui';
+import { Modal, Input, Label, ConfirmDialog, TruncatedText } from '../../shared/ui';
+import { MAX_PARTICIPANT_NAME_LENGTH } from '../../utils/constants/validation';
 
 /**
  * Memoized table row component to prevent unnecessary re-renders
@@ -17,8 +18,13 @@ const ParticipantRow = React.memo(function ParticipantRow({
 }) {
   return (
     <tr key={participant.id} className="border-b border-dark-700 hover:bg-dark-800 group">
-      <td className="px-4 py-2 text-gray-300">{participant.name || 'N/A'}</td>
-      <td className="px-4 py-2 text-gray-300">{participant.email || <span className="text-gray-500 italic">No email</span>}</td>
+      <td className="px-4 py-2 text-gray-300">
+        <TruncatedText text={participant.name || 'N/A'} maxWidth="200px" />
+      </td>
+      <td className="px-4 py-2 text-gray-300">
+        <TruncatedText text={participant.email} maxWidth="200px" />
+        {!participant.email && <span className="text-gray-500 italic">No email</span>}
+      </td>
       <td className="px-4 py-2 text-gray-300">{participant.duration || 0} days</td>
       <td className="px-4 py-2 text-gray-300">{(participant.availableDays || []).length}</td>
       <td className="px-4 py-2 text-right">
@@ -105,7 +111,7 @@ function ParticipantTable({ participants, actions }) {
                 value={newParticipantName}
                 onChange={(e) => setNewParticipantName(e.target.value)}
                 placeholder="Participant name"
-                maxLength="100"
+                maxLength={MAX_PARTICIPANT_NAME_LENGTH}
                 data-testid="create-participant-name"
               />
             </div>
@@ -117,7 +123,7 @@ function ParticipantTable({ participants, actions }) {
                 value={newParticipantEmail}
                 onChange={(e) => setNewParticipantEmail(e.target.value)}
                 placeholder="email@example.com"
-                maxLength="255"
+                maxLength="254"
                 data-testid="create-participant-email"
               />
             </div>
@@ -190,7 +196,7 @@ function ParticipantTable({ participants, actions }) {
               size="compact"
               value={editParticipantName}
               onChange={(e) => setEditParticipantName(e.target.value)}
-              maxLength="100"
+              maxLength={MAX_PARTICIPANT_NAME_LENGTH}
               data-testid="edit-participant-name-input"
             />
           </div>
@@ -201,7 +207,7 @@ function ParticipantTable({ participants, actions }) {
               size="compact"
               value={editParticipantEmail}
               onChange={(e) => setEditParticipantEmail(e.target.value)}
-              maxLength="255"
+              maxLength="254"
               data-testid="edit-participant-email-input"
             />
           </div>

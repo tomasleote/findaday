@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { subscribeToGroup } from '../services/groupService';
 import { addParticipant, updateParticipant, getParticipant, subscribeToParticipants } from '../services/participantService';
 import { getDatesBetween, calculateOverlap, getBestOverlapPeriods } from '../utils/overlap';
-import { ReadOnlyInput, CopyButton, Button, LoadingSpinner, Card } from '../shared/ui';
+import { ReadOnlyInput, CopyButton, Button, LoadingSpinner, Card, TruncatedText } from '../shared/ui';
 import { useNotification } from '../context/NotificationContext';
 import { useGroupContext } from '../shared/context';
 
@@ -190,7 +190,9 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
         </button>
 
         <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 mb-8">
-          <h1 className="text-3xl font-bold text-gray-50 mb-2">{group.name}</h1>
+          <h1 className="text-3xl font-bold text-gray-50 mb-2">
+            <TruncatedText text={group.name} />
+          </h1>
           {group.description && (
             <p className="text-gray-400 mb-4 italic">{group.description}</p>
           )}
@@ -237,7 +239,9 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
                 ) : (
                   participants?.map((p, i) => (
                     <div key={i} className="bg-dark-800 rounded p-3 border-l-4 border-blue-500">
-                      <p className="font-semibold text-gray-50">{p.name || 'Anonymous'}</p>
+                      <p className="font-semibold text-gray-50">
+                        <TruncatedText text={p.name || 'Anonymous'} maxWidth="100%" />
+                      </p>
                       <p className="text-gray-400 text-xs">{p.duration}-day trip</p>
                       <p className="text-gray-400 text-xs">{(p.availableDays || []).length} days available</p>
                     </div>
@@ -274,7 +278,9 @@ function ParticipantDashboard({ groupId, participantId, participantName, partici
   return (
     <div className="space-y-4">
       <div className="bg-dark-900 rounded-xl border border-dark-700 p-6">
-        <h2 className="text-xl font-bold text-gray-50 mb-1">Hi, {participantName}!</h2>
+        <h2 className="text-xl font-bold text-gray-50 mb-1 flex items-center gap-1">
+          Hi, <TruncatedText text={participantName} maxWidth="200px" />!
+        </h2>
         <p className="text-gray-400 text-sm mb-4">Your availability is saved.</p>
 
         <div className="mb-4">

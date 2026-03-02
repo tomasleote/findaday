@@ -2,7 +2,7 @@ import React from 'react';
 import SlidingOverlapCalendar from '../../components/SlidingOverlapCalendar';
 
 function OverlapResults({ group, participants, overlaps, durationFilter, onDurationChange }) {
-  if (!overlaps?.length) return null;
+  if (!group || !group.startDate || !group.endDate || !overlaps?.length) return null;
 
   return (
     <div className="mb-8">

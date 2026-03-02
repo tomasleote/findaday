@@ -219,17 +219,21 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                 )}
 
                 <div className="flex gap-3 pt-1">
-                    <button
+                    <Button
                         type="button"
                         onClick={onCancel}
-                        className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-semibold py-2.5 px-4 rounded-lg border border-dark-700 transition-colors text-sm"
+                        variant="secondary"
+                        weight="semibold"
+                        className="flex-1 py-2.5 text-sm"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         type="submit"
                         disabled={loading}
-                        className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-bold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                        variant="primary"
+                        weight="bold"
+                        className="flex-1 py-2.5 flex items-center justify-center gap-2 text-sm"
                     >
                         {loading
                             ? <><Loader2 size={15} className="animate-spin" /> {tab === 'find' ? 'Searching...' : 'Recovering...'}</>
@@ -237,7 +241,7 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                                 ? <><Search size={15} /> Find my groups</>
                                 : <><ArrowRight size={15} /> Recover access</>
                         }
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>

@@ -29,11 +29,16 @@ function Modal({ open, onClose, title, maxWidth = 'md', animated = false, childr
       <div
         className={`bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full ${widthClass} shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? "modal-title" : undefined}
+        aria-label={!title ? "Modal dialog" : undefined}
       >
         {title && (
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-50">{title}</h2>
+            <h2 id="modal-title" className="text-xl font-bold text-gray-50">{title}</h2>
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-500 hover:text-gray-300 transition-colors"
               aria-label="Close modal"
@@ -62,11 +67,16 @@ function Modal({ open, onClose, title, maxWidth = 'md', animated = false, childr
         transition={{ duration: 0.2 }}
         className={`bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full ${widthClass} shadow-2xl`}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? "modal-title" : undefined}
+        aria-label={!title ? "Modal dialog" : undefined}
       >
         {title && (
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-50">{title}</h2>
+            <h2 id="modal-title" className="text-xl font-bold text-gray-50">{title}</h2>
             <button
+              type="button"
               onClick={onClose}
               className="text-gray-500 hover:text-gray-300 transition-colors"
               aria-label="Close modal"

@@ -9,7 +9,7 @@ const _dbUrl = (() => {
     return `https://${process.env.REACT_APP_FIREBASE_PROJECT_ID || "vacation-scheduler-demo"}-default-rtdb.firebaseio.com`;
   }
   throw new Error(
-    '[firebase.js] REACT_APP_FIREBASE_DATABASE_URL must be set in production. ' +
+    '[firebaseConfig.js] REACT_APP_FIREBASE_DATABASE_URL must be set in production. ' +
     'Add it to your Vercel environment variables and redeploy.'
   );
 })();

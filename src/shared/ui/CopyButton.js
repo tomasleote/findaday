@@ -35,6 +35,7 @@ function CopyButton({
 
   return (
     <button
+      type="button"
       onClick={() => copy(value)}
       className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${variantClass}${className ? ` ${className}` : ''}`}
     >

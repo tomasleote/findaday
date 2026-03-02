@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getDatesBetween } from '../utils/overlap';
 import { Calendar, User, Mail, Clock, Sparkles, CalendarRange } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
+import { MAX_PARTICIPANT_NAME_LENGTH } from '../utils/constants/validation';
 
 const DayCell = React.memo(({ day, currentYear, currentMonth, monthName, isDateInRange, isDaySelected, onDayClick }) => {
   if (!day) {
@@ -223,11 +224,11 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value.slice(0, 30))}
+              onChange={(e) => setName(e.target.value.slice(0, MAX_PARTICIPANT_NAME_LENGTH))}
               required
               className="w-full bg-dark-800 hover:bg-dark-700 text-gray-50 font-medium pl-10 pr-4 py-2.5 rounded-full border border-dark-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
               placeholder="Your Name *"
-              maxLength="30"
+              maxLength={MAX_PARTICIPANT_NAME_LENGTH}
             />
           </div>
 
@@ -240,7 +241,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              maxLength="30"
+              maxLength="254"
               className="w-full bg-dark-800 hover:bg-dark-700 text-gray-50 font-medium pl-10 pr-4 py-2.5 rounded-full border border-dark-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all"
               placeholder="Email (optional)"
             />
