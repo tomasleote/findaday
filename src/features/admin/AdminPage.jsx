@@ -166,6 +166,20 @@ function AdminPage({ onBack }) {
     return <LoadingSpinner label="Loading..." />;
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card variant="danger" className="text-center max-w-md">
+          <h2 className="text-xl font-bold text-rose-400 mb-2">Access Denied</h2>
+          <p className="text-gray-300 mb-6 font-medium">{error}</p>
+          <Button variant="secondary" fullWidth onClick={onBack}>
+            Go Home
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   if (!group) {
     return (
       <div className="flex items-center justify-center min-h-screen">

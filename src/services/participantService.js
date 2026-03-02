@@ -97,12 +97,13 @@ export const deleteParticipant = async (groupId, participantId) => {
   await remove(participantRef);
 };
 
-export const subscribeToParticipants = (groupId, callback) => {
+export const subscribeToParticipants = (groupId, callback, onError) => {
   const participantRef = ref(database, `groups/${groupId}/participants`);
   const unsubscribe = onValue(participantRef, (snapshot) => {
     callback(snapshot.exists() ? Object.values(snapshot.val()) : []);
   }, (error) => {
     console.error("Participants sync error:", error);
+    if (onError) onError(error);
   });
   return unsubscribe;
 };
