@@ -9,6 +9,7 @@ const HomePage = React.lazy(() => import('./features/home/HomePage'));
 const GroupCreatedScreen = React.lazy(() => import('./features/home/GroupCreatedScreen'));
 const DocumentationPage = React.lazy(() => import('./features/docs/DocumentationPage'));
 const PrivacyPolicy = React.lazy(() => import('./features/legal/PrivacyPolicy'));
+const TermsOfService = React.lazy(() => import('./features/legal/TermsOfService'));
 
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
@@ -25,6 +26,11 @@ function App() {
 
     if (path === '/privacy') {
       setCurrentPage('privacy');
+      return;
+    }
+
+    if (path === '/terms') {
+      setCurrentPage('terms');
       return;
     }
 
@@ -161,6 +167,11 @@ function App() {
                 <PrivacyPolicy onBack={handleBackHome} />
               </ErrorBoundary>
             )}
+            {currentPage === 'terms' && (
+              <ErrorBoundary>
+                <TermsOfService onBack={handleBackHome} />
+              </ErrorBoundary>
+            )}
           </Suspense>
         </main>
         <Footer
@@ -174,8 +185,18 @@ function App() {
             window.history.pushState({}, '', path);
             window.scrollTo(0, 0);
           }}
+          onNavigateTerms={(path) => {
+            setCurrentPage('terms');
+            window.history.pushState({}, '', path);
+            window.scrollTo(0, 0);
+          }}
         />
-        <StorageConsent />
+        <StorageConsent onNavigate={(path) => {
+          const page = path.includes('privacy') ? 'privacy' : path.includes('terms') ? 'terms' : 'home';
+          setCurrentPage(page);
+          window.history.pushState({}, '', path);
+          window.scrollTo(0, 0);
+        }} />
       </div>
     </GroupProvider>
   );
