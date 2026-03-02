@@ -51,6 +51,7 @@ function ConfirmDialog({
       </div>
       <div className="flex gap-2">
         <button
+          type="button"
           onClick={onClose}
           className="flex-1 bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold py-2 px-4 rounded-lg border border-dark-700 transition-colors"
           data-testid={cancelTestId}
@@ -58,6 +59,7 @@ function ConfirmDialog({
           {cancelLabel}
         </button>
         <button
+          type="button"
           onClick={onConfirm}
           disabled={loading}
           className={`flex-1 ${confirmClass} font-bold py-2 px-4 rounded-lg transition-colors disabled:opacity-50`}

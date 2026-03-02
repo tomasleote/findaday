@@ -7,7 +7,8 @@ import { Download, Mail } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { useGroupContext } from '../../shared/context';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
-import { Button, LoadingSpinner, Card } from '../../shared/ui';
+import { validateParticipantName } from '../../utils/participantValidation';
+import { Button, LoadingSpinner, Card, TruncatedText, ConfirmDialog } from '../../shared/ui';
 import { useGroupData } from './hooks/useGroupData';
 import { useParticipantActions } from './hooks/useParticipantActions';
 import GroupSettings from './GroupSettings';
@@ -21,6 +22,7 @@ function AdminPage({ onBack }) {
   const [editing, setEditing] = useState(false);
   const [showPassphrase, setShowPassphrase] = useState(false);
   const [reminderSending, setReminderSending] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const baseUrl = window.location.origin;
   const participantLink = `${baseUrl}?group=${groupId}`;
@@ -65,13 +67,14 @@ function AdminPage({ onBack }) {
   }, [editData, groupId, group, setGroup, addNotification]);
 
   const handleDelete = useCallback(async () => {
-    if (!window.confirm('Are you sure? This will delete the entire group and all data.')) return;
     try {
       await deleteGroup(groupId);
       onBack();
     } catch (err) {
       console.error('[Admin Panel Error] handleDelete failed:', err);
       addNotification({ type: 'error', title: 'Delete Failed', message: err.message });
+    } finally {
+      setShowDeleteConfirm(false);
     }
   }, [groupId, onBack, addNotification]);
 
@@ -118,12 +121,9 @@ function AdminPage({ onBack }) {
     try {
       const finalDays = formData.selectedDays || [];
 
-      const normalizedName = formData.name.trim().toLowerCase();
-      const isDuplicate = participants?.some(
-        p => p.name.trim().toLowerCase() === normalizedName && p.id !== adminParticipantId
-      );
-      if (isDuplicate) {
-        throw new Error('A participant with this name already exists. Please choose another name.');
+      const nameCheck = validateParticipantName(formData.name, participants, adminParticipantId);
+      if (!nameCheck.valid) {
+        throw new Error(nameCheck.error || 'Invalid participant name.');
       }
 
       if (!adminParticipantId) {
@@ -189,7 +189,9 @@ function AdminPage({ onBack }) {
           >
             ← Back to Home
           </button>
-          <h1 className="text-3xl font-bold text-gray-50 flex-1 text-center">Admin Panel</h1>
+          <h1 className="text-3xl font-bold text-gray-50 flex-1 text-center truncate">
+            <TruncatedText text={group.name} />
+          </h1>
           <div className="w-20"></div>
         </div>
 
@@ -203,7 +205,7 @@ function AdminPage({ onBack }) {
               editData={editData}
               setEditData={setEditData}
               onSaveEdit={handleSaveEdit}
-              onDelete={handleDelete}
+              onDelete={() => setShowDeleteConfirm(true)}
               participantLink={participantLink}
               adminLink={adminLink}
               groupId={groupId}
@@ -237,7 +239,7 @@ function AdminPage({ onBack }) {
                 <Mail size={18} /> {reminderSending ? 'Sending...' : 'Send Reminder'}
               </button>
               <button
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 px-4 rounded-lg transition-colors"
               >
                 Delete Group
@@ -278,6 +280,17 @@ function AdminPage({ onBack }) {
           adminEmail={adminEmail}
           adminDuration={adminDuration}
           onSave={handleAdminAvailability}
+        />
+
+        <ConfirmDialog
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDelete}
+          title="Delete Group"
+          message="Are you sure? This will delete the entire group and all data. This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
         />
       </div>
     </div>

@@ -5,8 +5,8 @@ import { ReadOnlyInput, CopyButton, Button, Card } from '../../shared/ui';
 
 function GroupCreatedScreen({ groupId, adminToken, onEnterAdmin, onBack }) {
   const baseUrl = window.location.origin;
-  const participantLink = `${baseUrl}?group=${groupId}`;
-  const adminLink = `${baseUrl}?group=${groupId}&admin=${adminToken}`;
+  const participantLink = `${baseUrl}?group=${encodeURIComponent(groupId)}`;
+  const adminLink = `${baseUrl}?group=${encodeURIComponent(groupId)}&admin=${encodeURIComponent(adminToken)}`;
 
   return (
     <div className="flex items-center justify-center min-h-screen px-4">

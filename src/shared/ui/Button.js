@@ -1,11 +1,11 @@
 import React from 'react';
 
 const variantMap = {
-  primary:   'bg-blue-500 hover:bg-blue-400 text-white',
+  primary: 'bg-blue-500 hover:bg-blue-400 text-white',
   secondary: 'bg-dark-800 hover:bg-dark-700 text-gray-300 border border-dark-700',
-  danger:    'bg-rose-600 hover:bg-rose-500 text-white',
-  success:   'bg-emerald-600 hover:bg-emerald-500 text-white',
-  ghost:     'text-gray-400 hover:text-gray-200',
+  danger: 'bg-rose-600 hover:bg-rose-500 text-white',
+  success: 'bg-emerald-600 hover:bg-emerald-500 text-white',
+  ghost: 'text-gray-400 hover:text-gray-200',
 };
 
 const sizeMap = {
@@ -59,6 +59,7 @@ const Button = React.forwardRef(function Button(
 
   return (
     <button
+      type="button"
       ref={ref}
       className={`${baseClass} ${variantClass} ${sizeClass} ${roundingClass} ${weightClass}${widthClass ? ` ${widthClass}` : ''}${className ? ` ${className}` : ''}`}
       {...props}

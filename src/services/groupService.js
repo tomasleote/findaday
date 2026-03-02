@@ -46,28 +46,43 @@ export const createGroup = async (groupData) => {
 };
 
 export const getGroup = async (groupId) => {
-  const groupRef = ref(database, `groups/${groupId}`);
-  const snapshot = await get(groupRef);
-  return snapshot.exists() ? snapshot.val() : null;
+  try {
+    const groupRef = ref(database, `groups/${groupId}`);
+    const snapshot = await get(groupRef);
+    return snapshot.exists() ? snapshot.val() : null;
+  } catch (error) {
+    console.error(`Failed to getGroup ${groupId}:`, error);
+    throw new Error(`Failed to getGroup ${groupId}: ${error.message}`);
+  }
 };
 
 export const updateGroup = async (groupId, updates) => {
-  const { adminTokenHash, ...safeUpdates } = updates;
-  const groupRef = ref(database, `groups/${groupId}`);
-  await update(groupRef, safeUpdates);
+  try {
+    const { adminTokenHash, ...safeUpdates } = updates;
+    const groupRef = ref(database, `groups/${groupId}`);
+    await update(groupRef, safeUpdates);
+  } catch (error) {
+    console.error(`Failed to updateGroup ${groupId}:`, error);
+    throw new Error(`Failed to updateGroup ${groupId}: ${error.message}`);
+  }
 };
 
 export const deleteGroup = async (groupId) => {
-  const groupRef = ref(database, `groups/${groupId}`);
-  await remove(groupRef);
+  try {
+    const groupRef = ref(database, `groups/${groupId}`);
+    await remove(groupRef);
+  } catch (error) {
+    console.error(`Failed to deleteGroup ${groupId}:`, error);
+    throw new Error(`Failed to deleteGroup ${groupId}: ${error.message}`);
+  }
 };
 
 export const subscribeToGroup = (groupId, callback) => {
   const groupRef = ref(database, `groups/${groupId}`);
-  const listener = onValue(groupRef, (snapshot) => {
+  const unsubscribe = onValue(groupRef, (snapshot) => {
     callback(snapshot.exists() ? snapshot.val() : null);
   }, (error) => {
     console.error("Group sync error:", error);
   });
-  return () => off(groupRef, 'value', listener);
+  return unsubscribe;
 };

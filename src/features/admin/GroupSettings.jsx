@@ -1,6 +1,7 @@
 import React from 'react';
 import { CalendarRange, Users, Mail, Copy, CheckCircle2, Edit, X, Save, KeyRound, Eye, EyeOff } from 'lucide-react';
-import { Input, Label, ReadOnlyInput, CopyButton } from '../../shared/ui';
+import { Input, Label, ReadOnlyInput, CopyButton, TruncatedText } from '../../shared/ui';
+import { MAX_GROUP_NAME_LENGTH } from '../../utils/constants/validation';
 
 function GroupSettings({
   group,
@@ -27,7 +28,9 @@ function GroupSettings({
     <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 h-full">
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-50 mb-2">{group.name}</h2>
+          <h2 className="text-2xl font-bold text-gray-50 mb-2">
+            <TruncatedText text={group.name} />
+          </h2>
           {group.description && (
             <p className="text-gray-400 text-sm mb-3">{group.description}</p>
           )}
@@ -117,7 +120,7 @@ function GroupSettings({
               size="compact"
               value={editData.name}
               onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-              maxLength="30"
+              maxLength={MAX_GROUP_NAME_LENGTH}
             />
           </div>
 
@@ -165,7 +168,7 @@ function GroupSettings({
                 size="compact"
                 value={editData.adminEmail || ''}
                 onChange={(e) => setEditData({ ...editData, adminEmail: e.target.value })}
-                maxLength="30"
+                maxLength="254"
                 placeholder="your@email.com"
               />
               <p className="text-xs text-gray-500 mt-1">Used for password recovery and sending reminders.</p>

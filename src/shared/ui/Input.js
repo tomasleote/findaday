@@ -45,13 +45,13 @@ const Textarea = React.forwardRef(function Textarea({ size = 'default', classNam
 /**
  * Shared Label — replaces duplicated label class strings.
  *
- * @param {'default'|'small'} [size]     — 'default' or 'small'
+ * @param {'default'|'compact'|'small'} [size]     — 'default', 'compact', or 'small'
  * @param {string}            [className] — Additional classes
  */
 const labelSizeMap = {
   default: 'block text-sm font-medium text-gray-300 mb-1.5',
   compact: 'block text-sm font-medium text-gray-300 mb-1',
-  small:   'block text-xs font-medium text-gray-400 mb-1',
+  small: 'block text-xs font-medium text-gray-400 mb-1',
 };
 
 function Label({ size = 'default', className = '', children, ...props }) {
@@ -66,13 +66,13 @@ function Label({ size = 'default', className = '', children, ...props }) {
 /**
  * ReadOnlyInput — styled readonly input for displaying copy-able links/values.
  */
-const ReadOnlyInput = React.forwardRef(function ReadOnlyInput({ className = '', ...props }, ref) {
+const ReadOnlyInput = React.forwardRef(function ReadOnlyInput({ className = '', readOnly, ...props }, ref) {
   return (
     <input
       ref={ref}
-      readOnly
       className={`flex-1 px-3 py-2 border border-dark-700 rounded-lg text-sm bg-dark-800 text-gray-300${className ? ` ${className}` : ''}`}
       {...props}
+      readOnly={true}
     />
   );
 });

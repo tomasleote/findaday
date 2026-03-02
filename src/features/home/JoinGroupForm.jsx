@@ -15,18 +15,20 @@ function JoinGroupForm({ onSuccess, onCancel }) {
 
     try {
       const { getGroup } = await import('../../firebase');
-      const group = await getGroup(groupId);
+      const trimmedGroupId = groupId.trim();
+      const group = await getGroup(trimmedGroupId);
       if (!group) {
         addNotification({ type: 'error', message: 'Group not found' });
         return;
       }
 
-      const savedToken = localStorage.getItem(`vacation_admin_${groupId}`);
+      const savedToken = localStorage.getItem(`vacation_admin_${trimmedGroupId}`);
       if (savedToken) {
         setIsAdminFound(true);
         setAdminToken(savedToken);
+        setGroupId(trimmedGroupId);
       } else {
-        onSuccess(groupId);
+        onSuccess(trimmedGroupId);
       }
     } catch (err) {
       console.error('[Join Group Error] handleSubmit failed:', err);

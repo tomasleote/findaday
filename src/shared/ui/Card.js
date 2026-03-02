@@ -11,12 +11,13 @@ export function Card({
   title,
   ...props
 }) {
-  const variantClass = {
+  const variantMap = {
     default: 'bg-dark-900 border border-dark-700 rounded-xl p-6',
     secondary: 'bg-dark-800 border border-dark-700/60 rounded-xl p-4',
     info: 'bg-blue-500/10 border border-blue-500/20 rounded-lg p-4',
     subtle: 'bg-dark-900 border border-dark-700/50 rounded-xl p-6',
-  }[variant];
+  };
+  const variantClass = variantMap[variant] || variantMap.default;
 
   return (
     <div className={`${variantClass} ${className}`} {...props}>

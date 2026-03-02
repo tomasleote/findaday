@@ -68,7 +68,7 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
               variant="primary"
               size="lg"
               rounding="lg"
-              onClick={() => { setShowCreate(true); setShowJoin(false); }}
+              onClick={() => { setShowCreate(true); setShowJoin(false); setShowRecover(false); }}
               className="flex items-center gap-2"
             >
               Create a Trip <ArrowRight size={18} />
@@ -77,7 +77,7 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
               variant="secondary"
               size="lg"
               rounding="lg"
-              onClick={() => { setShowJoin(true); setShowCreate(false); }}
+              onClick={() => { setShowJoin(true); setShowCreate(false); setShowRecover(false); }}
             >
               Join a Trip
             </Button>
