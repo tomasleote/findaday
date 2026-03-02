@@ -48,7 +48,11 @@ function CreateGroupForm({ onSuccess, onCancel }) {
       onSuccess(result);
     } catch (err) {
       console.error('[Group Creation Error] handleSubmit failed:', err);
-      addNotification({ type: 'error', title: 'Error', message: err.message });
+      if (err.message === 'Failed to fetch') {
+        addNotification({ type: 'error', title: 'Network Error', message: 'You appear to be offline. Failed to create group.' });
+      } else {
+        addNotification({ type: 'error', title: 'Error', message: err.message });
+      }
     } finally {
       setLoading(false);
     }

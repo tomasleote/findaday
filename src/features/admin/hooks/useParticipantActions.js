@@ -55,14 +55,20 @@ export function useParticipantActions(groupId, group, participants, setParticipa
     try {
       await addParticipant(groupId, { name, email, duration: 3, availableDays: [] });
       addNotification({ type: 'success', title: 'Participant Created', message: `${name} has been added to the group.` });
+      // Only wipe form state AFTER successful creation
       setShowCreateParticipant(false);
       setNewParticipantName('');
       setNewParticipantEmail('');
       setParticipants(prev => prev.filter(p => p.id !== tempId));
     } catch (err) {
       console.error('[Admin Panel] handleCreateParticipant failed:', err);
+      // Revert optimistic participant from list, but KEEP form inputs so user can retry
       setParticipants(prev => prev.filter(p => p.id !== tempId));
-      addNotification({ type: 'error', title: 'Create Failed', message: err.message });
+      if (err.message === 'Failed to fetch') {
+        addNotification({ type: 'error', title: 'Create Failed', message: 'You appear to be offline. Check your network connection and try again.' });
+      } else {
+        addNotification({ type: 'error', title: 'Create Failed', message: err.message });
+      }
     } finally {
       setCreateLoading(false);
     }
@@ -203,7 +209,11 @@ export function useParticipantActions(groupId, group, participants, setParticipa
       }
     } catch (err) {
       console.error('[Admin Panel] handleSendInvite failed:', err);
-      addNotification({ type: 'error', title: 'Network Error', message: 'Failed to send invite. Check your connection.' });
+      if (err.message === 'Failed to fetch') {
+        addNotification({ type: 'error', title: 'Network Error', message: 'You appear to be offline. Failed to send invite.' });
+      } else {
+        addNotification({ type: 'error', title: 'Invite Failed', message: err.message || 'Failed to send invite.' });
+      }
     } finally {
       setInviteSendingId(null);
     }

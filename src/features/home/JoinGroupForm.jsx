@@ -32,7 +32,11 @@ function JoinGroupForm({ onSuccess, onCancel }) {
       }
     } catch (err) {
       console.error('[Join Group Error] handleSubmit failed:', err);
-      addNotification({ type: 'error', title: 'Error', message: err.message });
+      if (err.message === 'Failed to fetch') {
+        addNotification({ type: 'error', title: 'Network Error', message: 'You appear to be offline. Please check your connection and try again.' });
+      } else {
+        addNotification({ type: 'error', title: 'Error', message: err.message });
+      }
     } finally {
       setLoading(false);
     }

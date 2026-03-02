@@ -75,7 +75,14 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
           setParticipantDuration(String(participant.duration || '3'));
           setHeatmapDuration(String(participant.duration || '3'));
         }
-      } catch { }
+      } catch (err) {
+        console.error('[ParticipantView] Failed to restore participant:', err);
+        addNotification({
+          type: 'error',
+          title: 'Network Error',
+          message: 'Could not load your saved dates. Please check your connection or try again later.'
+        });
+      }
     };
     restore();
   }, [groupId, initialParticipantId]);
