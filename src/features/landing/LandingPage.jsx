@@ -43,6 +43,12 @@ export default function LandingPage({ type }) {
                 <meta property="og:description" content={content.metaDescription} />
                 <meta property="og:url" content={`https://findadate.app/${content.slug}`} />
                 <meta property="og:type" content="website" />
+                <meta property="og:image" content="https://findadate.app/logo.png" />
+                <meta property="og:site_name" content="FindADate" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={content.title} />
+                <meta name="twitter:description" content={content.metaDescription} />
+                <meta name="twitter:image" content="https://findadate.app/logo.png" />
             </Helmet>
 
             <SchemaMarkup type={type} content={content} />

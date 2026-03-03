@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { Calendar, Users, Sparkles, ArrowRight, KeyRound } from 'lucide-react';
 import { Modal, Button, Card, Header } from '../../shared/ui';
@@ -30,6 +31,21 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
   const closeAll = () => { setShowCreate(false); setShowJoin(false); setShowRecover(false); };
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>FindADate — Find the Best Date for Any Group Event</title>
+        <meta name="description" content="Everyone marks their availability. The algorithm finds the overlap. Free, no sign-up required." />
+        <link rel="canonical" href="https://findadate.app/" />
+        <meta property="og:title" content="FindADate — Find the Best Date for Any Group Event" />
+        <meta property="og:description" content="Everyone marks their availability. The algorithm finds the overlap. Free, no sign-up required." />
+        <meta property="og:url" content="https://findadate.app/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://findadate.app/logo.png" />
+        <meta property="og:site_name" content="FindADate" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="FindADate — Find the Best Date for Any Group Event" />
+        <meta name="twitter:description" content="Stop texting. Start planning. Free group date finder." />
+        <meta name="twitter:image" content="https://findadate.app/logo.png" />
+      </Helmet>
       {/* Nav Bar */}
       <Header
         onCreate={() => { setShowCreate(true); setShowJoin(false); setShowRecover(false); }}
