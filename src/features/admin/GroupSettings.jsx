@@ -1,6 +1,6 @@
 import React from 'react';
 import { CalendarRange, Users, Mail, Copy, CheckCircle2, Edit, X, Save, KeyRound, Eye, EyeOff } from 'lucide-react';
-import { CopyButton, ReadOnlyInput, TruncatedText, Input, Label, Card } from '../../shared/ui';
+import { CopyButton, ReadOnlyInput, TruncatedText, Input, Label, Card, LocationInput, LocationDisplay } from '../../shared/ui';
 import { MAX_GROUP_NAME_LENGTH } from '../../utils/constants/validation';
 import { getEventConfig } from '../../utils/eventTypes';
 
@@ -115,6 +115,11 @@ function GroupSettings({
               </span>
             </div>
           </div>
+          {group.location && (
+            <div className="mt-3 pt-3 border-t border-dark-700/50">
+              <LocationDisplay location={group.location} />
+            </div>
+          )}
         </div>
       )}
 
@@ -142,6 +147,16 @@ function GroupSettings({
               rows="2"
               maxLength="500"
             />
+          </div>
+
+          <div>
+            <Label size="compact">Location</Label>
+            <LocationInput
+              value={editData.location || null}
+              onSelect={(location) => setEditData({ ...editData, location })}
+              onError={(error) => console.error('Location error:', error)}
+            />
+            <p className="text-xs text-gray-500 mt-1">Where will you meet? City, address, or restaurant.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
