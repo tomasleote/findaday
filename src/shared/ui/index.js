@@ -12,3 +12,4 @@ export { default as LocationInput } from './LocationInput';
 export { default as LocationDisplay } from './LocationDisplay';
 export { StorageConsent } from './StorageConsent';
 export { Header } from './Header';
+export { default as CalendarPicker } from './CalendarPicker';
