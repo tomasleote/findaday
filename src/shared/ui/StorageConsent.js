@@ -9,8 +9,17 @@ export function StorageConsent({ onNavigate }) {
         if (typeof window !== 'undefined') {
             try {
                 consent = localStorage.getItem('fad_storage_consent');
+
+                // Migrate legacy consent if new one doesn't exist
+                if (!consent) {
+                    const legacyConsent = localStorage.getItem('storage_consent');
+                    if (legacyConsent) {
+                        consent = legacyConsent;
+                        localStorage.setItem('fad_storage_consent', consent);
+                    }
+                }
             } catch (e) {
-                console.warn('[StorageConsent] Failed to read consent:', e);
+                console.warn('[StorageConsent] Failed to read/migrate consent:', e);
             }
         }
         if (!consent) {
