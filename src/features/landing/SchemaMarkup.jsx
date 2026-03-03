@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-export default function SchemaMarkup({ type, content }) {
+export default function SchemaMarkup({ type, content, group }) {
     const schemas = [];
 
     // 1. SoftwareApplication (Home/VACATION is core utility)
@@ -17,7 +17,33 @@ export default function SchemaMarkup({ type, content }) {
         });
     }
 
-    // 2. FAQ schema for all pages with questions
+    // 2. Event schema for group pages with location data
+    if (group?.location) {
+        schemas.push({
+            "@context": "https://schema.org",
+            "@type": "Event",
+            "name": group.name || "Group Event",
+            "location": {
+                "@type": "Place",
+                "name": group.location.name || group.location.formattedAddress,
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": group.location.street || "",
+                    "addressLocality": group.location.city || "",
+                    "addressCountry": group.location.country || ""
+                },
+                ...(group.location.lat && group.location.lng && {
+                    "geo": {
+                        "@type": "GeoCoordinates",
+                        "latitude": group.location.lat,
+                        "longitude": group.location.lng
+                    }
+                })
+            }
+        });
+    }
+
+    // 3. FAQ schema for all pages with questions
     if (content.faqs && content.faqs.length > 0) {
         schemas.push({
             "@context": "https://schema.org",
@@ -30,7 +56,7 @@ export default function SchemaMarkup({ type, content }) {
         });
     }
 
-    // 3. HowTo schema for use case pages
+    // 4. HowTo schema for use case pages
     if (type !== 'doodle' && type !== 'when2meet') {
         schemas.push({
             "@context": "https://schema.org",

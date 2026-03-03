@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { subscribeToGroup } from '../services/groupService';
 import { addParticipant, updateParticipant, getParticipant, subscribeToParticipants } from '../services/participantService';
 import { getDatesBetween, calculateOverlap, getBestOverlapPeriods } from '../utils/overlap';
-import { ReadOnlyInput, CopyButton, Button, LoadingSpinner, Card, TruncatedText } from '../shared/ui';
+import { ReadOnlyInput, CopyButton, Button, LoadingSpinner, Card, TruncatedText, LocationDisplay } from '../shared/ui';
 import { useNotification } from '../context/NotificationContext';
 import { useGroupContext } from '../shared/context';
 import { isSingleDayEvent } from '../utils/eventTypes';
@@ -234,6 +234,11 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
             <span className="flex items-center gap-1.5"><CalendarRange size={16} className="text-gray-500" /> {group.startDate} to {group.endDate}</span>
             <span className="flex items-center gap-1.5"><Users size={16} className="text-gray-500" /> {participants?.length || 0} people attending</span>
           </div>
+          {group.location && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <LocationDisplay location={group.location} />
+            </div>
+          )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
