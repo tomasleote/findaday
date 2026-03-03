@@ -20,14 +20,14 @@ export default function ComparisonTable({ type }) {
     return (
         <div className="w-full">
             <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Find a Day vs {competitor}</h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Find A Day vs {competitor}</h2>
                 <p className="text-lg text-gray-400">Why thousands are making the switch in 2026.</p>
             </div>
 
             <div className="bg-dark-900 border border-dark-800 rounded-3xl overflow-hidden shadow-2xl">
                 <div className="grid grid-cols-3 bg-dark-950 p-6 border-b border-dark-800 items-center">
                     <div className="text-gray-400 font-bold uppercase tracking-wider text-xs">Features</div>
-                    <div className="text-brand-500 font-bold text-lg text-center">Find a Day</div>
+                    <div className="text-brand-500 font-bold text-lg text-center">Find A Day</div>
                     <div className="text-gray-500 font-bold text-lg text-center">{competitor}</div>
                 </div>
 

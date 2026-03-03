@@ -83,7 +83,7 @@ export function Footer({ onNavigateDocs, onNavigatePrivacy, onNavigateTerms }) {
             </div>
 
             <div className="max-w-6xl mx-auto pt-6 border-t border-dark-800 flex flex-col md:flex-row items-center justify-between text-xs text-gray-500">
-                <p>&copy; {currentYear} Find a Day. All rights reserved.</p>
+                <p>&copy; {currentYear} Find A Day. All rights reserved.</p>
                 <div className="flex space-x-4 mt-2 md:mt-0">
                     <Link
                         to="/privacy"

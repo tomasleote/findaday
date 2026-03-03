@@ -136,7 +136,7 @@ describe('calendarEvent Utilities', () => {
             const overlap = { startDate: '2026-01-01' };
             const details = buildCalendarEventDetails(group, overlap, 2);
 
-            expect(details.title).toBe('Find a Day Event');
+            expect(details.title).toBe('Find A Day Event');
             expect(details.startDate).toBe('2026-01-01');
             expect(details.endDate).toBe('2026-01-01');
             expect(details.description).toContain('0/2 participants available');

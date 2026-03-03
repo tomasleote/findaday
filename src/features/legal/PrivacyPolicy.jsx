@@ -37,7 +37,7 @@ export default function PrivacyPolicy({ onBack }) {
                 <article className="space-y-12 pb-20">
                     <section className="space-y-4">
                         <p className="leading-relaxed text-lg">
-                            At Find a Day, we believe your data should be handled with transparency and respect. This policy explains how we collect and process your information when you use our service.
+                            At Find A Day, we believe your data should be handled with transparency and respect. This policy explains how we collect and process your information when you use our service.
                         </p>
                     </section>
 

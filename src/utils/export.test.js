@@ -82,7 +82,7 @@ describe('exportToCSV', () => {
     expect(parsed.data.length).toBeGreaterThan(0);
 
     // Check header row exists
-    expect(csvContent).toContain('Find a Day Export');
+    expect(csvContent).toContain('Find A Day Export');
     expect(csvContent).toContain('Summer Trip');
     expect(csvContent).toContain('Alice');
     expect(csvContent).toContain('Bob');
