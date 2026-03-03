@@ -12,7 +12,7 @@ describe('Footer', () => {
 
     it('renders the FAD logo correctly', () => {
         renderFooter();
-        expect(screen.getByText((content, element) => element.tagName === 'H3' && element.textContent === 'Find a Day')).toBeInTheDocument();
+        expect(screen.getByText((content, element) => element.tagName === 'H3' && element.textContent === 'Find A Day')).toBeInTheDocument();
     });
 
     it('renders all resource links', () => {

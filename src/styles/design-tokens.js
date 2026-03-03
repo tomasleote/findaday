@@ -1,5 +1,5 @@
 // src/styles/design-tokens.js
-// Find a Day Design Token System
+// Find A Day Design Token System
 // This file is the SINGLE SOURCE OF TRUTH for all visual properties.
 // All components should reference these tokens. Never hardcode colors.
 
@@ -77,7 +77,7 @@ export const tokens = {
     full: '9999px',
   },
   brand: {
-    name: 'Find a Day',
+    name: 'Find A Day',
     tagline: 'Find the best date for anything.',
     taglineAlt: 'Stop texting. Start planning.',
     email: 'hello@findaday.app',

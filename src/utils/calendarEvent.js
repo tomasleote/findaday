@@ -96,7 +96,7 @@ export function generateICSContent({ title, description, startDate, endDate, loc
     const lines = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//Find a Day//Find a Day//EN',
+        'PRODID:-//Find A Day//Find A Day//EN',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
         'BEGIN:VEVENT',
@@ -144,7 +144,7 @@ export function downloadICSFile(icsContent, filename) {
  * @returns {Object} { title, description, startDate, endDate }
  */
 export function buildCalendarEventDetails(group, overlap, participantCount) {
-    const title = group.name || 'Find a Day Event';
+    const title = group.name || 'Find A Day Event';
     const startDate = overlap.startDate;
     const endDate = overlap.endDate || overlap.startDate; // single-day events have same start/end
 
@@ -157,7 +157,7 @@ export function buildCalendarEventDetails(group, overlap, participantCount) {
         `\nDate: ${formatDateLong(startDate)}${startDate !== endDate ? ` — ${formatDateLong(endDate)}` : ''}`,
         `\n${availableCount}/${participantCount} participants available`,
         location ? `\nLocation: ${location}` : '',
-        `\n\nOrganized with Find a Day — findaday.app`,
+        `\n\nOrganized with Find A Day — findaday.app`,
     ].join('');
 
     return { title, description, startDate, endDate, location };

@@ -3,7 +3,7 @@ import Papa from 'papaparse';
 export const exportToCSV = (group, participants, overlaps) => {
   const data = [];
 
-  data.push(['Find a Day Export']);
+  data.push(['Find A Day Export']);
   data.push(['Group:', group.name]);
   data.push(['Date Range:', `${group.startDate} to ${group.endDate}`]);
   data.push(['Created:', new Date(group.createdAt).toLocaleString()]);

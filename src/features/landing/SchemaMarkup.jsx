@@ -1,15 +1,16 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-export default function SchemaMarkup({ type, content, group }) {
+export default function SchemaMarkup({ type, content = {}, group }) {
     const schemas = [];
+    const effectiveType = type || group?.eventType || 'vacation';
 
     // 1. SoftwareApplication (Home/VACATION is core utility)
-    if (type === 'vacation') {
+    if (effectiveType === 'vacation') {
         schemas.push({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "Find a Day",
+            "name": "Find A Day",
             "applicationCategory": "UtilitiesApplication",
             "operatingSystem": "Web",
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -57,11 +58,11 @@ export default function SchemaMarkup({ type, content, group }) {
     }
 
     // 4. HowTo schema for use case pages
-    if (type !== 'doodle' && type !== 'when2meet') {
+    if (effectiveType && effectiveType !== 'doodle' && effectiveType !== 'when2meet' && effectiveType !== 'vacation') {
         schemas.push({
             "@context": "https://schema.org",
             "@type": "HowTo",
-            "name": `How to Find the Best Date for ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+            "name": `How to Find the Best Date for ${effectiveType.charAt(0).toUpperCase() + effectiveType.slice(1)}`,
             "step": [
                 { "@type": "HowToStep", "text": "Create an event and set your date range" },
                 { "@type": "HowToStep", "text": "Share the link with your group" },
