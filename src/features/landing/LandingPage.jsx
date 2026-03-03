@@ -7,6 +7,7 @@ import { landingPagesConfig } from './landingPageContent';
 import ComparisonTable from './ComparisonTable';
 import RelatedPages from './RelatedPages';
 import SchemaMarkup from './SchemaMarkup';
+import { Header } from '../../shared/ui';
 
 // Map textual emoji/icon keys to actual Lucide components to ensure NO EMOJIS are used
 const ICON_MAP = {
@@ -47,20 +48,7 @@ export default function LandingPage({ type }) {
             <SchemaMarkup type={type} content={content} />
 
             {/* Nav */}
-            <nav className="w-full max-w-6xl mx-auto px-6 py-6 flex items-center justify-between z-10 relative">
-                <Link to="/" className="text-xl font-bold tracking-tight hover:opacity-80 transition-opacity flex items-center gap-2">
-                    <span className="text-brand-500"><CalendarRange size={24} /></span>
-                    <span>Find<span className="text-brand-500">A</span>Date</span>
-                </Link>
-                <div className="flex gap-4">
-                    <Link to="/?action=join" className="text-sm font-semibold text-gray-300 hover:text-white transition-colors hidden sm:block mt-2">
-                        Join Event
-                    </Link>
-                    <Link to="/" className="px-5 py-2 rounded-full bg-brand-500 text-white text-sm font-bold shadow-lg shadow-brand-500/20 hover:scale-105 active:scale-95 transition-transform hover:shadow-brand-500/30">
-                        Create Event
-                    </Link>
-                </div>
-            </nav>
+            <Header />
 
             {/* Hero */}
             <main className="flex-1 w-full flex flex-col items-center">

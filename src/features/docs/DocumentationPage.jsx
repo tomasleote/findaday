@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { ArrowLeft, BookOpen, Users, Calendar, ShieldCheck, HelpCircle, Code, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Header } from '../../shared/ui';
 
 export default function DocumentationPage({ onBack }) {
     // Scroll to top on mount
@@ -9,8 +10,9 @@ export default function DocumentationPage({ onBack }) {
     }, []);
 
     return (
-        <div className="min-h-screen p-4 md:p-8 text-gray-300">
-            <div className="max-w-4xl mx-auto">
+        <div className="min-h-screen bg-dark-950 text-gray-300">
+            <Header />
+            <div className="max-w-4xl mx-auto p-4 md:p-8">
 
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-10">
