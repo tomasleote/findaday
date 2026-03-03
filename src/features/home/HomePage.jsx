@@ -16,9 +16,10 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
 
   useEffect(() => {
     const action = searchParams.get('action');
-    if (action === 'create') setShowCreate(true);
-    else if (action === 'join') setShowJoin(true);
-    else if (action === 'recover') setShowRecover(true);
+    if (action === 'create') { setShowCreate(true); setShowJoin(false); setShowRecover(false); }
+    else if (action === 'join') { setShowJoin(true); setShowCreate(false); setShowRecover(false); }
+    else if (action === 'recover') { setShowRecover(true); setShowCreate(false); setShowJoin(false); }
+    else { setShowCreate(false); setShowJoin(false); setShowRecover(false); } // Handle default/no-action case
 
     if (action) {
       searchParams.delete('action');
@@ -117,6 +118,7 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
         open={showCreate || showJoin || showRecover}
         onClose={closeAll}
         title={showCreate ? 'Create Event' : showJoin ? 'Join Event' : 'Recover Admin Access'}
+        maxWidth={showCreate ? 'lg' : 'md'}
         animated
       >
         {showCreate && (

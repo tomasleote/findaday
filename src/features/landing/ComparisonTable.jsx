@@ -43,11 +43,15 @@ export default function ComparisonTable({ type }) {
                         >
                             <div className="text-gray-200 font-semibold">{feature.name}</div>
                             <div className="text-white font-medium text-center flex flex-col items-center gap-2">
-                                <CheckCircle2 size={24} className="text-brand-500" />
+                                {feature.findadate?.toLowerCase().includes('yes') ? (
+                                    <CheckCircle2 size={24} className="text-brand-500" />
+                                ) : (
+                                    <XCircle size={24} className="text-red-500/80" />
+                                )}
                                 <span className="text-sm">{feature.findadate}</span>
                             </div>
                             <div className="text-gray-500 text-center flex flex-col items-center gap-2">
-                                {feature[competitorKey].toLowerCase().includes('yes') ? (
+                                {feature[competitorKey]?.toLowerCase().includes('yes') ? (
                                     <CheckCircle2 size={24} className="text-gray-500 opacity-50" />
                                 ) : (
                                     <XCircle size={24} className="text-red-500/50" />

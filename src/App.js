@@ -85,8 +85,12 @@ function RootHandler() {
         }
       } catch { }
 
+      setAdminToken(null);
+      setParticipantId(null);
       setCurrentPage('participant');
     } else {
+      setAdminToken(null);
+      setParticipantId(null);
       setCurrentPage('home');
     }
   }, [gId, adminTok, pId]);
@@ -110,6 +114,8 @@ function RootHandler() {
       return;
     }
     setGroupId(joinGId);
+    setAdminToken(null);
+    setParticipantId(null);
     setCurrentPage('participant');
     navigate(`/?group=${joinGId}`);
   };
