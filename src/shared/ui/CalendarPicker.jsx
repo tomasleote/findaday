@@ -152,7 +152,7 @@ function CalendarPicker({
       {/* Calendar grid */}
       {isOpen && (
         <div
-          className="mt-1 bg-dark-900 border border-dark-700 rounded-xl p-3 animate-fade-in"
+          className="absolute top-full left-0 right-0 mt-1 bg-dark-900 border border-dark-700 rounded-xl p-3 animate-fade-in z-50 shadow-lg"
           role="grid"
           aria-label={formatMonthYear(viewYear, viewMonth)}
         >
