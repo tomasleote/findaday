@@ -196,7 +196,7 @@ function MainLayout() {
             <Route path="/vacation-planner" element={<LandingPage type="vacation" />} />
             <Route path="/doodle-alternative" element={<LandingPage type="doodle" />} />
             <Route path="/when2meet-alternative" element={<LandingPage type="when2meet" />} />
-            <Route path="/find-a-date-for-dinner" element={<LandingPage type="dinner" />} />
+            <Route path="/find-a-day-for-dinner" element={<LandingPage type="dinner" />} />
             <Route path="/group-event-planner" element={<LandingPage type="event" />} />
             <Route path="/team-scheduling" element={<LandingPage type="team" />} />
             <Route path="/party-planner" element={<LandingPage type="party" />} />

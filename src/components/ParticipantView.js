@@ -9,6 +9,7 @@ import { isSingleDayEvent } from '../utils/eventTypes';
 
 import CalendarView from './CalendarView';
 import SlidingOverlapCalendar from './SlidingOverlapCalendar';
+import SchemaMarkup from '../features/landing/SchemaMarkup';
 import { ChevronDown, ChevronUp, CalendarRange, Users } from 'lucide-react';
 
 function ParticipantView({ participantId: initialParticipantId, onBack }) {
@@ -212,6 +213,7 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
 
   return (
     <div className="min-h-screen p-4 md:p-8">
+      <SchemaMarkup group={group} content={{}} />
       <div className="max-w-4xl mx-auto">
         <button
           onClick={onBack}

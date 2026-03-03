@@ -16,6 +16,7 @@ import GroupSettings from './GroupSettings';
 import ParticipantTable from './ParticipantTable';
 import AdminAvailability from './AdminAvailability';
 import OverlapResults from './OverlapResults';
+import SchemaMarkup from '../landing/SchemaMarkup';
 
 function AdminPage({ onBack }) {
   const { groupId, adminToken } = useGroupContext();
@@ -190,6 +191,7 @@ function AdminPage({ onBack }) {
 
   return (
     <div className="min-h-screen p-4 md:p-8">
+      <SchemaMarkup group={group} content={{}} />
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-start mb-8">
           <button

@@ -26,10 +26,12 @@ export const createGroup = async (groupData) => {
     if (!adminTokenHash) {
       throw new Error('Failed to generate admin token hash');
     }
+    const location = groupData.location || null;
     const groupRef = ref(database, `groups/${groupId}`);
     const groupPayload = {
       name,
       description,
+      location,
       startDate,
       endDate,
       eventType,
