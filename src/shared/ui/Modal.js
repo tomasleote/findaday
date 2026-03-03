@@ -27,7 +27,7 @@ function Modal({ open, onClose, title, maxWidth = 'md', animated = false, childr
       onClick={onClose}
     >
       <div
-        className={`bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full ${widthClass} shadow-2xl`}
+        className={`bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full ${widthClass} shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -65,7 +65,7 @@ function Modal({ open, onClose, title, maxWidth = 'md', animated = false, childr
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 24, scale: 0.96 }}
         transition={{ duration: 0.2 }}
-        className={`bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full ${widthClass} shadow-2xl`}
+        className={`bg-dark-900 border border-dark-700 rounded-2xl p-6 w-full ${widthClass} shadow-2xl max-h-[calc(100vh-2rem)] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
