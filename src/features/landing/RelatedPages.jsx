@@ -7,9 +7,14 @@ export default function RelatedPages({ currentType, relatedSlugs }) {
     if (!relatedSlugs || relatedSlugs.length === 0) return null;
 
     // Convert slugs back to keys to find their configs
-    const relatedTypes = Object.entries(landingPagesConfig)
-        .filter(([_, config]) => relatedSlugs.includes(config.slug))
-        .map(([type]) => type);
+    // Preserves array order and allows both slugs and matching config keys directly
+    const relatedTypes = relatedSlugs
+        .map(slugOrKey => {
+            if (landingPagesConfig[slugOrKey]) return slugOrKey;
+            const entry = Object.entries(landingPagesConfig).find(([_, config]) => config.slug === slugOrKey);
+            return entry ? entry[0] : null;
+        })
+        .filter(Boolean);
 
     return (
         <div className="max-w-6xl mx-auto px-6">

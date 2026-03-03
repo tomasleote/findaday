@@ -42,6 +42,7 @@ export function Footer({ onNavigateDocs, onNavigatePrivacy, onNavigateTerms }) {
                         <li>
                             <Link
                                 to="/docs"
+                                onClick={handleDocsClick}
                                 className="text-sm text-gray-400 hover:text-brand-400 transition-colors flex items-center gap-2 group"
                             >
                                 <BookOpen size={14} className="group-hover:text-brand-400 transition-colors" />
@@ -86,12 +87,14 @@ export function Footer({ onNavigateDocs, onNavigatePrivacy, onNavigateTerms }) {
                 <div className="flex space-x-4 mt-2 md:mt-0">
                     <Link
                         to="/privacy"
+                        onClick={handlePrivacyClick}
                         className="hover:text-brand-400 transition-colors"
                     >
                         Privacy Policy
                     </Link>
                     <Link
                         to="/terms"
+                        onClick={handleTermsClick}
                         className="hover:text-brand-400 transition-colors"
                     >
                         Terms of Service

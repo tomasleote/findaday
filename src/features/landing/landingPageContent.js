@@ -28,7 +28,7 @@ export const landingPagesConfig = {
         subtitle: 'No ads. No account required. No paywalled features. FindADate is what Doodle used to be — but better, with visual heatmaps and multi-day event support.',
         emoji: '✨',
         problemSection: [
-            'Doodle was once the go-to tool for group scheduling. But with 93% one-star reviews on Trustpilot, an ad-cluttered free tier, and formerly free features now locked behind a $6.95/month paywall, users are actively searching for alternatives.',
+            'Doodle was once the go-to tool for group scheduling. But with many users reporting frustrating ads and formerly free features now locked behind a paid tier, users are actively searching for alternatives.',
             'The core problem Doodle solves — "when is everyone free?" — is still valid. But Doodle\'s execution has deteriorated. You shouldn\'t need a subscription to schedule a dinner with friends. You shouldn\'t have to watch ads while trying to coordinate a team offsite.',
             'FindADate takes Doodle\'s original promise and does it properly. Visual availability heatmaps show overlap at a glance. Multi-day date ranges support vacations and retreats, not just one-hour meetings. And it\'s genuinely free — no ads, no account for participants, no limits.'
         ],
@@ -110,7 +110,7 @@ export const landingPagesConfig = {
         subtitle: 'Distributed team? Multiple timezones? Conflicting PTO? Share one link and let everyone mark their available dates. The heatmap finds the window that works.',
         emoji: '💼',
         problemSection: [
-            '92% of remote teams span at least two timezones. Planning a quarterly offsite, annual retreat, or all-hands meeting means coordinating across different work schedules, PTO calendars, and travel constraints. Enterprise tools like Calendly are overkill (and expensive) for what should be a simple question: when can everyone make it?',
+            'Many remote teams span at least two timezones. Planning a quarterly offsite, annual retreat, or all-hands meeting means coordinating across different work schedules, PTO calendars, and travel constraints. Enterprise tools are often overkill (and expensive) for what should be a simple question: when can everyone make it?',
             'FindADate gives you the answer in minutes. Set the potential date range for your offsite (e.g., Q3 2026), share the link with your team on Slack or email, and everyone marks their available days. The visual heatmap immediately shows which weeks have the highest team availability.',
             'No per-seat pricing. No SSO required. No account creation for team members. Just a link, a calendar, and a result.'
         ],
@@ -150,7 +150,7 @@ export const landingPagesConfig = {
         subtitle: 'D&D session? Board game night? LAN party? Finding an evening that works for 4-8 players is harder than the final boss. Let the algorithm handle it.',
         emoji: '🎲',
         problemSection: [
-            'Every board gamer and D&D group knows the struggle. You need 4-8 players to all be free on the same evening, and coordinating that across busy adult schedules is a recurring headache. The r/boardgames community (5M+ members) consistently calls scheduling "the biggest barrier to playing."',
+            'Every board gamer and D&D group knows the struggle. You need players to all be free on the same evening, and coordinating that across busy adult schedules is a recurring headache. The tabletop community frequently cites scheduling as the biggest barrier to playing.',
             'When2Meet\'s hourly grid is overkill for what you need — you just want to know which evenings this month work for everyone. Group chats devolve into "I can do Tuesday but not next Tuesday" spirals that nobody wants to manage.',
             'FindADate makes it simple. Set the month, share the link in your game group chat, and everyone taps which evenings they\'re free. The heatmap shows the winning night. Roll initiative.'
         ],
