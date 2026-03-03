@@ -5,6 +5,7 @@ import { Input, Textarea, Label, Button, Card } from '../../shared/ui';
 import { apiCall } from '../../services/apiService';
 import { MAX_GROUP_NAME_LENGTH } from '../../utils/constants/validation';
 import { EVENT_TYPES, getEventConfig } from '../../utils/eventTypes';
+import { Link } from 'react-router-dom';
 
 function CreateGroupForm({ onSuccess, onCancel }) {
   const [name, setName] = useState('');
@@ -150,7 +151,7 @@ function CreateGroupForm({ onSuccess, onCancel }) {
           placeholder="your@email.com"
         />
         <p className="text-[10px] text-gray-500 mt-1 leading-tight">
-          Used only for recovery and notifications. See our <a href="/privacy" className="text-brand-500 hover:underline" onClick={(e) => { e.preventDefault(); window.history.pushState({}, '', '/privacy'); window.dispatchEvent(new Event('popstate')); }}>Privacy Policy</a>.
+          Used only for recovery and notifications. See our <Link to="/privacy" className="text-brand-500 hover:underline">Privacy Policy</Link>.
         </p>
       </div>
 
