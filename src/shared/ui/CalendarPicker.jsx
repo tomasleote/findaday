@@ -147,7 +147,7 @@ function CalendarPicker({
       </button>
 
       {/* Hidden input for form integration */}
-      <input type="hidden" name={id} value={value} required={required} />
+      <input type="hidden" name={id} value={value} />
 
       {/* Calendar grid */}
       {isOpen && (

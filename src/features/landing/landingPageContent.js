@@ -140,7 +140,7 @@ export const landingPagesConfig = {
             { question: 'How do I Find A Day for a bachelor or bachelorette party?', answer: 'Create a Find A Day event with the potential weekend range, share the link with the group, and everyone marks which weekends they\'re free. The heatmap shows the best weekend instantly.' },
             { question: 'Is Find A Day good for large parties with 20+ guests?', answer: 'Absolutely. Find A Day works with groups of any size. The visual heatmap becomes even more useful with larger groups where manual coordination is impossible.' }
         ],
-        relatedPages: ['find-a-date-for-dinner', 'group-event-planner', 'vacation-planner'],
+        relatedPages: ['find-a-day-for-dinner', 'group-event-planner', 'vacation-planner'],
     },
     'gamenight': {
         slug: 'game-night-planner',
@@ -160,6 +160,6 @@ export const landingPagesConfig = {
             { question: 'Does Find A Day work for D&D scheduling?', answer: 'Perfectly. Set a date range, have your party mark their free evenings, and find the session that works for the most players. No more cancelled sessions.' },
             { question: 'How is Find A Day better than a poll for game nights?', answer: 'Polls show you who voted for what. Find A Day shows you a visual heatmap of everyone\'s availability, making it instantly clear which evening has the most overlap — especially useful when you need a minimum number of players.' }
         ],
-        relatedPages: ['find-a-date-for-dinner', 'when2meet-alternative', 'group-event-planner'],
+        relatedPages: ['find-a-day-for-dinner', 'when2meet-alternative', 'group-event-planner'],
     }
 };

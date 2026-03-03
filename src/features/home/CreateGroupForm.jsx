@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyRound, Eye, EyeOff, MapPin } from 'lucide-react';
+import { KeyRound, Eye, EyeOff } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { Input, Textarea, Label, Button, Card, LocationInput, CalendarPicker } from '../../shared/ui';
 import { todayYMD } from '../../utils/dateUtils';

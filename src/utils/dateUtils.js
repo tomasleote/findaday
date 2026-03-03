@@ -13,6 +13,7 @@ export function fromYMD(str) {
 
 /** Format Date → "YYYY-MM-DD" */
 export function toYMD(date) {
+  if (!date) return '';
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');

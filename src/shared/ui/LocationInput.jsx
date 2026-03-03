@@ -31,12 +31,11 @@ function LocationInput({
   const [allowAutocomplete, setAllowAutocomplete] = useState(true);
   const searchTimeoutRef = useRef(null);
   const blurTimeoutRef = useRef(null);
+  const selectingPredictionRef = useRef(false);
 
   // Update input when value prop changes
   useEffect(() => {
-    if (value?.formattedAddress) {
-      setInputValue(value.formattedAddress);
-    }
+    setInputValue(value?.formattedAddress || '');
   }, [value]);
 
   // Cleanup timeouts on unmount
@@ -101,6 +100,7 @@ function LocationInput({
   };
 
   const handleSelectPrediction = async (prediction) => {
+    selectingPredictionRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -124,6 +124,10 @@ function LocationInput({
       if (onError) onError(err);
     } finally {
       setLoading(false);
+      // Small delay to ensure blur handler check finishes
+      setTimeout(() => {
+        selectingPredictionRef.current = false;
+      }, 300);
     }
   };
 
@@ -132,15 +136,16 @@ function LocationInput({
     if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
     blurTimeoutRef.current = setTimeout(() => {
       setShowPredictions(false);
-    }, 200);
-
-    // If user typed something but didn't select from dropdown, treat as manual entry
-    if (inputValue && !value?.placeId) {
-      const manualLocation = parseManualLocation(inputValue);
-      if (manualLocation) {
-        onSelect(manualLocation);
+      // If user typed something but didn't select from dropdown, treat as manual entry
+      // Skip if we're currently selecting a prediction to avoid duplicate calls
+      // Also skip if the input value is the same as the currently selected value (to avoid re-selecting same location)
+      if (!selectingPredictionRef.current && inputValue && inputValue !== value?.formattedAddress) {
+        const manualLocation = parseManualLocation(inputValue);
+        if (manualLocation) {
+          onSelect(manualLocation);
+        }
       }
-    }
+    }, 200);
   };
 
   if (readOnly) {
