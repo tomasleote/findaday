@@ -150,7 +150,6 @@ function GroupSettings({
           </div>
 
           <div>
-            <Label size="compact">Location</Label>
             <LocationInput
               value={editData.location || null}
               onSelect={(location) => setEditData({ ...editData, location })}

@@ -121,7 +121,6 @@ function CreateGroupForm({ onSuccess, onCancel }) {
       </div>
 
       <div>
-        <Label>Location (optional)</Label>
         <LocationInput
           value={location}
           onSelect={setLocation}
