@@ -294,13 +294,13 @@ function AdminPage({ onBack }) {
         />
 
         <ConfirmDialog
-          isOpen={showDeleteConfirm}
+          open={showDeleteConfirm}
           onClose={() => setShowDeleteConfirm(false)}
           onConfirm={handleDelete}
           title="Delete Group"
           message="Are you sure? This will delete the entire group and all data. This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
           variant="danger"
         />
       </div>
