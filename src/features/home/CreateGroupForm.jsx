@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { KeyRound, Eye, EyeOff, MapPin } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
-import { Input, Textarea, Label, Button, Card, LocationInput } from '../../shared/ui';
+import { Input, Textarea, Label, Button, Card, LocationInput, CalendarPicker } from '../../shared/ui';
+import { todayYMD } from '../../utils/dateUtils';
 import { apiCall } from '../../services/apiService';
 import { MAX_GROUP_NAME_LENGTH } from '../../utils/constants/validation';
 import { EVENT_TYPES, getEventConfig } from '../../utils/eventTypes';
@@ -24,6 +25,11 @@ function CreateGroupForm({ onSuccess, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!startDate || !endDate) {
+      addNotification({ type: 'error', message: 'Please select both start and end dates.' });
+      return;
+    }
 
     if (new Date(endDate) < new Date(startDate)) {
       addNotification({ type: 'error', message: 'End Date cannot be before Start Date.' });
@@ -129,24 +135,28 @@ function CreateGroupForm({ onSuccess, onCancel }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label>Start Date</Label>
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <Label>End Date</Label>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-          />
-        </div>
+        <CalendarPicker
+          label="Start Date"
+          id="start-date"
+          value={startDate}
+          onChange={(v) => {
+            setStartDate(v);
+            // Reset end date if it's now before the new start date
+            if (endDate && v && endDate < v) setEndDate('');
+          }}
+          minDate={todayYMD()}
+          required
+          placeholder="Start date"
+        />
+        <CalendarPicker
+          label="End Date"
+          id="end-date"
+          value={endDate}
+          onChange={setEndDate}
+          minDate={startDate || todayYMD()}
+          required
+          placeholder="End date"
+        />
       </div>
 
       <Card variant="info" className="p-3">

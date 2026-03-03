@@ -234,27 +234,31 @@ function AdminPage({ onBack }) {
           <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 h-full">
             <h3 className="font-semibold text-gray-300 mb-4">Actions</h3>
             <div className="space-y-2">
-              <button
+              <Button
+                variant="secondary"
+                fullWidth
                 onClick={handleExport}
                 disabled={!participants || participants.length === 0}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
               >
-                <Download size={18} /> Export CSV
-              </button>
-              <button
+                <Download size={16} className="inline mr-1.5" /> Export CSV
+              </Button>
+              <Button
+                variant="primary"
+                fullWidth
                 onClick={handleSendReminder}
                 disabled={reminderSending || !participants?.some(p => p?.email && p.email.trim() !== '')}
-                className="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
                 title={!participants?.some(p => p?.email && p.email.trim() !== '') ? 'No participants have an email address' : ''}
               >
-                <Mail size={18} /> {reminderSending ? 'Sending...' : 'Send Reminder'}
-              </button>
-              <button
+                <Mail size={16} className="inline mr-1.5" />
+                {reminderSending ? 'Sending...' : 'Send Reminder'}
+              </Button>
+              <Button
+                variant="danger"
+                fullWidth
                 onClick={() => setShowDeleteConfirm(true)}
-                className="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2 px-4 rounded-lg transition-colors"
               >
                 Delete Group
-              </button>
+              </Button>
             </div>
           </div>
 

@@ -30,9 +30,9 @@ export function Footer({ onNavigateDocs, onNavigatePrivacy, onNavigateTerms }) {
         <footer className="mt-auto border-t border-dark-800 bg-dark-950 py-10 w-full px-4 md:px-8">
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <div className="space-y-3">
-                    <h3 className="text-lg font-bold text-gray-50">Find<span className="text-brand-500"> a </span>Day</h3>
+                    <h3 className="text-lg font-bold text-gray-50">Find<span className="text-brand-500"> A </span>Day</h3>
                     <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
-                        Find the best date for any group event. Vacations, dinners, parties, game nights — everyone marks their dates, we find the overlap.
+                        Find the best day for any group event. Vacations, dinners, parties, game nights — everyone marks their dates, we find the overlap.
                     </p>
                 </div>
 
