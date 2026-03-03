@@ -141,7 +141,7 @@ export function downloadICSFile(icsContent, filename) {
  * @param {Object} group - The group object from Firebase
  * @param {Object} overlap - An overlap result object
  * @param {number} participantCount - Total number of participants
- * @returns {Object} { title, description, startDate, endDate }
+ * @returns {Object} { title, description, startDate, endDate, location }
  */
 export function buildCalendarEventDetails(group, overlap, participantCount) {
     const title = group.name || 'Find A Day Event';
