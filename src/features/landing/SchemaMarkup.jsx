@@ -9,7 +9,7 @@ export default function SchemaMarkup({ type, content, group }) {
         schemas.push({
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "FindADate",
+            "name": "Find a Day",
             "applicationCategory": "UtilitiesApplication",
             "operatingSystem": "Web",
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },

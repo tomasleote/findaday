@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { KeyRound, Eye, EyeOff } from 'lucide-react';
+import { KeyRound, Eye, EyeOff, MapPin } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
-import { Input, Textarea, Label, Button, Card } from '../../shared/ui';
+import { Input, Textarea, Label, Button, Card, LocationInput } from '../../shared/ui';
 import { apiCall } from '../../services/apiService';
 import { MAX_GROUP_NAME_LENGTH } from '../../utils/constants/validation';
 import { EVENT_TYPES, getEventConfig } from '../../utils/eventTypes';
@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 function CreateGroupForm({ onSuccess, onCancel }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [location, setLocation] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
@@ -34,7 +35,16 @@ function CreateGroupForm({ onSuccess, onCancel }) {
     try {
       const { createGroup, hashPhrase } = await import('../../firebase');
       const recoveryPasswordHash = passphrase.trim() ? await hashPhrase(passphrase.trim()) : null;
-      const result = await createGroup({ name, description, startDate, endDate, eventType, adminEmail, recoveryPasswordHash });
+      const result = await createGroup({
+        name,
+        description,
+        location,
+        startDate,
+        endDate,
+        eventType,
+        adminEmail,
+        recoveryPasswordHash
+      });
       // Best-effort welcome email — does not block group creation
       if (adminEmail) {
         apiCall('/api/send-welcome', {
@@ -107,6 +117,15 @@ function CreateGroupForm({ onSuccess, onCancel }) {
           placeholder={config.descriptionPlaceholder}
           rows="1"
           maxLength="500"
+        />
+      </div>
+
+      <div>
+        <Label>Location (optional)</Label>
+        <LocationInput
+          value={location}
+          onSelect={setLocation}
+          placeholder="Where will it take place?"
         />
       </div>
 
@@ -200,6 +219,7 @@ function CreateGroupForm({ onSuccess, onCancel }) {
         </Button>
       </div>
     </form>
+
   );
 }
 
