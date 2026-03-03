@@ -1,4 +1,4 @@
-# Vacation Scheduler
+# Find A Day
 
 A web application designed to eliminate the headache of scheduling group vacations. Built with React and Firebase, this tool automatically calculates the optimal travel dates by finding the best overlap based on every participant's unique availability and desired trip duration.
 
