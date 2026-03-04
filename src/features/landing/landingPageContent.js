@@ -11,7 +11,7 @@ export const landingPagesConfig = {
             'Traditional scheduling tools like Doodle are built for one-hour meetings, not week-long vacations. When you\'re coordinating a multi-day trip across 8-15 people with different vacation schedules, work commitments, and travel constraints, you need a tool that understands date ranges — not time slots.',
             'Find A Day was built for exactly this. Set your potential travel window (say, June through August), share one link, and let everyone mark which days they\'re free. The heatmap instantly shows you where the most people overlap. No sign-up, no ads, no back-and-forth.'
         ],
-        showComparison: false,
+        showComparison: true,
         faqs: [
             { question: 'How does Find A Day work for vacation planning?', answer: 'Create an event with your travel date range, share the link with your group, and everyone marks their available days on a visual calendar. The algorithm calculates the best overlapping window where the most people are free.' },
             { question: 'Do participants need to create an account?', answer: 'No. Participants only need the shared link. They enter their name, mark their available days, and submit. No sign-up, no email required.' },
@@ -43,7 +43,7 @@ export const landingPagesConfig = {
     },
     'when2meet': {
         slug: 'when2meet-alternative',
-        title: 'When2Meet Alternative That Works on Mobile | Find A Day',
+        title: 'Best When2Meet Alternative 2026 That Works on Mobile | Find A Day',
         metaDescription: 'When2Meet, but modern. Find A Day works on every device, supports multi-day events, and doesn\'t abandon you after the poll.',
         h1: 'When2Meet, But Built for 2026',
         subtitle: 'Same zero-friction approach you love. Modern UI that actually works on phones. Plus multi-day event support and a workflow that doesn\'t end at the heatmap.',

@@ -45,6 +45,28 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
         <meta name="twitter:title" content="Find A Day — Find the Best Day for Any Group Event" />
         <meta name="twitter:description" content="Stop texting. Start planning. Free group date finder." />
         <meta name="twitter:image" content="https://findaday.app/logo.png" />
+        <script type="application/ld+json">
+          {JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "Find A Day",
+              "url": "https://findaday.app/",
+              "logo": "https://findaday.app/logo.png"
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Find A Day",
+              "url": "https://findaday.app/",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://findaday.app/search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            }
+          ])}
+        </script>
       </Helmet>
       {/* Nav Bar */}
       <Header

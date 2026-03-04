@@ -5,18 +5,16 @@ export default function SchemaMarkup({ type, content = {}, group }) {
     const schemas = [];
     const effectiveType = type || group?.eventType || 'vacation';
 
-    // 1. SoftwareApplication (Home/VACATION is core utility)
-    if (effectiveType === 'vacation') {
-        schemas.push({
-            "@context": "https://schema.org",
-            "@type": "SoftwareApplication",
-            "name": "Find A Day",
-            "applicationCategory": "UtilitiesApplication",
-            "operatingSystem": "Web",
-            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-            "description": "Free group scheduling tool. Everyone marks their availability, the algorithm finds the best overlapping dates."
-        });
-    }
+    // 1. SoftwareApplication (All landing pages)
+    schemas.push({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Find A Day",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "description": "Free group scheduling tool. Everyone marks their availability, the algorithm finds the best overlapping dates."
+    });
 
     // 2. Event schema for group pages with location data
     if (group?.location) {
@@ -69,6 +67,25 @@ export default function SchemaMarkup({ type, content = {}, group }) {
                 { "@type": "HowToStep", "text": "Everyone marks their available dates" },
                 { "@type": "HowToStep", "text": "See the best overlapping dates instantly" }
             ]
+        });
+    }
+
+    // 5. BreadcrumbList schema for all landing pages
+    if (content && content.slug) {
+        schemas.push({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://findaday.app/"
+            }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": content.h1 || "Planner",
+                "item": `https://findaday.app/${content.slug}`
+            }]
         });
     }
 
