@@ -177,5 +177,65 @@ export const landingPagesConfig = {
             { question: 'How is Find A Day better than a poll for game nights?', answer: 'Polls show you who voted for what. Find A Day shows you a visual heatmap of everyone\'s availability, making it instantly clear which evening has the most overlap — especially useful when you need a minimum number of players.' }
         ],
         relatedPages: ['find-a-day-for-dinner', 'when2meet-alternative', 'group-event-planner'],
+    },
+    'christmas': {
+        slug: 'christmas-dinner-planner',
+        title: 'Free Christmas Dinner Date Planner | Find A Day',
+        metaDescription: 'Coordinating a holiday gathering or Christmas dinner? Stop arguing in the group chat. Everyone marks free dates; we find the best overlap instantly.',
+        h1: 'Plan the Perfect Christmas Dinner Date',
+        subtitle: 'The holidays are stressful enough. Easily coordinate a date for your friend group\'s Christmas dinner or holiday party without the 50-message debate.',
+        emoji: '🎄',
+        problemSection: [
+            'December is the busiest month of the year. Trying to organize a "Friendsmas" or a large family holiday dinner means fighting against company parties, travel schedules, and general seasonal exhaustion.',
+            'Group chats inevitably devolve into "I can do the 12th or 15th, but not the 18th" until the organizer gives up.',
+            'Find A Day solves the holiday puzzle. Set a date range, share the festive link, and watch the visual heatmap reveal the one night that actually works for everyone.'
+        ],
+        showComparison: false,
+        faqs: [
+            { question: 'Do my guests need accounts to RSVP with dates?', answer: 'No. Just send the link in your holiday group chat. Guests tap their free evenings on their phones and you see the results.' },
+            { question: 'Is this better than a standard Doodle poll?', answer: 'Yes. Our visual calendar is much easier to use, entirely free, and contains absolutely zero disruptive advertisements.' },
+            { question: 'Can I restrict the dates they can vote on?', answer: 'Yes, you specify the exact date range (for example, Dec 1st to Dec 23rd) so guests only vote on the window you want to host.' }
+        ],
+        relatedPages: ['find-a-day-for-dinner', 'party-planner', 'group-event-planner'],
+    },
+    'summer': {
+        slug: 'summer-vacation-planner',
+        title: 'Group Summer Vacation Date Planner | Find A Day',
+        metaDescription: 'Planning a group summer trip? Don\'t guess when everyone is free. Share a link, collect multi-day availability, and book your group vacation hassle-free.',
+        h1: 'Coordinate the Best Group Summer Vacation',
+        subtitle: 'Find the perfect week for a beach house trip, Euro-summer, or cabin getaway across 8+ different work schedules. Free, fast, and visual.',
+        emoji: '☀️',
+        problemSection: [
+            'Summer weekends book up incredibly fast. If you try to plan a group vacation in June by asking "what week works for you?" in February, you will never get a straight answer.',
+            'You cannot book flights or reserve that perfect Airbnb until you have a locked-in date window. Text threads are useless for visualizing 5-to-7 day overlapping blocks across multiple people.',
+            'Find A Day is designed specifically for multi-day travel. Select the whole summer, share the link, and let your group highlight their unbroken free days. The heatmap instantly reveals your travel window.'
+        ],
+        showComparison: false,
+        faqs: [
+            { question: 'How is this different from hourly schedulers?', answer: 'Find A Day natively supports multi-day selections perfectly. Participants simply drag across the days they can travel, creating a clear visual overlap.' },
+            { question: 'Is it free for large travel groups?', answer: 'Yes, Find A Day is completely free regardless of whether 3 people or 30 people are joining the trip.' },
+            { question: 'Can I use this for weekend getaways?', answer: 'Absolutely. It is perfect for finding a shared 3-day weekend among friends.' }
+        ],
+        relatedPages: ['vacation-planner', 'group-event-planner', 'team-scheduling'],
+    },
+    'family': {
+        slug: 'family-reunion-planner',
+        title: 'Family Reunion Date Scheduler | Find A Day',
+        metaDescription: 'Organizing a massive family reunion? Find A Day handles availability for unlimited participants easily. Share one link, find the perfect reunion weekend.',
+        h1: 'Find the Best Weekend for the Family Reunion',
+        subtitle: 'Stop trying to wrangle 40 different cousins, aunts, and uncles via email chains. Find the weekend that works for the most relatives with one simple link.',
+        emoji: '👨‍👩‍👧‍👦',
+        problemSection: [
+            'Planning a family reunion is a logistical nightmare. You are trying to find a date that accommodates different school districts, cross-country travel constraints, and varying budgets.',
+            'Email chains break down immediately. Sending out multiple surveys is exhausting. Often, the organizer just picks a date arbitrarily, resulting in half the family being unable to attend.',
+            'Find A Day makes it democratic and visual. Set the target month, email the link to the family, and watch the heatmap show exactly which weekend accommodates the highest percentage of the bloodline.'
+        ],
+        showComparison: false,
+        faqs: [
+            { question: 'Is there a limit to how many family members can vote?', answer: 'No limit at all. It handles 5 people or 100 people effortlessly.' },
+            { question: 'Will less tech-savvy relatives be able to use it?', answer: 'Yes. The interface is purposefully simple: no account creation, no passwords. Just type a name and click the free days.' },
+            { question: 'What if we can\'t find a date where 100% of people can come?', answer: 'The heatmap clearly shows you the dates with the highest density of availability, allowing you to confidently pick the date that works for the vast majority' }
+        ],
+        relatedPages: ['group-event-planner', 'vacation-planner', 'party-planner'],
     }
 };
