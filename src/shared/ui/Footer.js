@@ -28,7 +28,7 @@ export function Footer({ onNavigateDocs, onNavigatePrivacy, onNavigateTerms }) {
 
     return (
         <footer className="mt-auto border-t border-dark-800 bg-dark-950 py-10 w-full px-4 md:px-8">
-            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
                 <div className="space-y-3">
                     <h3 className="text-lg font-bold text-gray-50">Find<span className="text-brand-500"> A </span>Day</h3>
                     <p className="text-sm text-gray-400 leading-relaxed max-w-xs">
@@ -60,6 +60,26 @@ export function Footer({ onNavigateDocs, onNavigatePrivacy, onNavigateTerms }) {
                                 GitHub Repository
                             </a>
                         </li>
+                    </ul>
+                </div>
+
+                <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-200 uppercase tracking-wider">Use Cases</h4>
+                    <ul className="space-y-2">
+                        <li><Link to="/christmas-dinner-planner" className="text-sm text-gray-400 hover:text-brand-400 transition-colors">Christmas Dinner Planner</Link></li>
+                        <li><Link to="/summer-vacation-planner" className="text-sm text-gray-400 hover:text-brand-400 transition-colors">Summer Vacation Planner</Link></li>
+                        <li><Link to="/family-reunion-planner" className="text-sm text-gray-400 hover:text-brand-400 transition-colors">Family Reunion Planner</Link></li>
+                    </ul>
+                </div>
+
+                <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-gray-200 uppercase tracking-wider">Compare</h4>
+                    <ul className="space-y-2">
+                        <li><Link to="/compare" className="text-sm text-gray-400 hover:text-brand-400 transition-colors">Compare Tools</Link></li>
+                        <li><Link to="/compare/doodle" className="text-sm text-gray-400 hover:text-brand-400 transition-colors">Find A Day vs Doodle</Link></li>
+                        <li><Link to="/compare/when2meet" className="text-sm text-gray-400 hover:text-brand-400 transition-colors">Find A Day vs When2Meet</Link></li>
+                        <li><Link to="/compare/lettucemeet" className="text-sm text-gray-400 hover:text-brand-400 transition-colors">Find A Day vs LettuceMeet</Link></li>
+                        <li><Link to="/compare/rally" className="text-sm text-gray-400 hover:text-brand-400 transition-colors">Find A Day vs Rally</Link></li>
                     </ul>
                 </div>
 

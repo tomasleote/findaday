@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { CalendarRange, Sparkles, MessageCircle, Share2, CheckCircle2, ChevronDown, ArrowRight, Palmtree, Utensils, Users, Gamepad2, Plane, Tv, CalendarDays, Zap, Clock, ThumbsUp } from 'lucide-react';
+import { CalendarRange, Sparkles, MessageCircle, Share2, CheckCircle2, ChevronDown, ArrowRight, Palmtree, Utensils, Users, Gamepad2, Plane, Tv, CalendarDays, Zap, Clock, ThumbsUp, Gift, Sun, HeartHandshake } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { landingPagesConfig } from './landingPageContent';
 import ComparisonTable from './ComparisonTable';
@@ -19,6 +19,9 @@ const ICON_MAP = {
     team: Users,
     party: Tv,
     gamenight: Gamepad2,
+    christmas: Gift,
+    summer: Sun,
+    family: HeartHandshake,
 };
 
 export default function LandingPage({ type }) {
