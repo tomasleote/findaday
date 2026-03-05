@@ -7,8 +7,11 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+import { hydrateRoot, createRoot } from 'react-dom/client';
+
+const rootElement = document.getElementById('root');
+
+const app = (
   <React.StrictMode>
     <ErrorBoundary>
       <HelmetProvider>
@@ -21,3 +24,10 @@ root.render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+if (rootElement.hasChildNodes()) {
+  hydrateRoot(rootElement, app);
+} else {
+  const root = createRoot(rootElement);
+  root.render(app);
+}

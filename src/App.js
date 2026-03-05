@@ -12,6 +12,8 @@ const DocumentationPage = React.lazy(() => import('./features/docs/Documentation
 const PrivacyPolicy = React.lazy(() => import('./features/legal/PrivacyPolicy'));
 const TermsOfService = React.lazy(() => import('./features/legal/TermsOfService'));
 const LandingPage = React.lazy(() => import('./features/landing/LandingPage'));
+const BlogIndex = React.lazy(() => import('./features/blog/BlogIndex'));
+const BlogPost = React.lazy(() => import('./features/blog/BlogPost'));
 
 function RootHandler() {
   const [searchParams] = useSearchParams();
@@ -203,6 +205,8 @@ function MainLayout() {
             <Route path="/party-planner" element={<LandingPage type="party" />} />
             <Route path="/game-night-planner" element={<LandingPage type="gamenight" />} />
             <Route path="/docs" element={<DocumentationPage onBack={() => navigate('/')} />} />
+            <Route path="/blog" element={<BlogIndex onBack={() => navigate('/')} />} />
+            <Route path="/blog/:slug" element={<BlogPost onBack={() => navigate('/blog')} />} />
             <Route path="/privacy" element={<PrivacyPolicy onBack={() => navigate('/')} />} />
             <Route path="/terms" element={<TermsOfService onBack={() => navigate('/')} />} />
           </Routes>
