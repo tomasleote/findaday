@@ -152,34 +152,74 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
         {/* Enhanced SEO Sections */}
         <div className="w-full max-w-5xl mx-auto mt-32 space-y-24 px-4 text-left">
           {/* Problem Section */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-3xl font-bold text-white mb-6">The Universal Scheduling Problem</h2>
             <div className="space-y-4 text-lg text-gray-400 leading-relaxed">
-              <p>You want to get a group together. You drop the inevitable "when is everyone free?" into the group chat. What follows is a chaotic spiral of conflicting answers. Three people can do Friday, two say Saturday, and four haven't replied at all. Trying to coordinate a group schedule manually becomes a full-time job for the organizer. The larger the group, the harder it is to find a day that actually works for everyone.</p>
-              <p>Traditional group availability tools haven't evolved. Some force you to create accounts before you can launch a poll. Others bombard your friends with intrusive ads just to submit their availability. And most are built for one-hour corporate meetings, making them completely useless if you're trying to schedule a multi-day trip or an open-ended weekend.</p>
+              <motion.p
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                You want to get a group together. You drop the inevitable "when is everyone free?" into the group chat. What follows is a chaotic spiral of conflicting answers. Three people can do Friday, two say Saturday, and four haven't replied at all. Trying to coordinate a group schedule manually becomes a full-time job for the organizer. The larger the group, the harder it is to find a day that actually works for everyone.
+              </motion.p>
+              <motion.p
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                Traditional group availability tools haven't evolved. Some force you to create accounts before you can launch a poll. Others bombard your friends with intrusive ads just to submit their availability. And most are built for one-hour corporate meetings, making them completely useless if you're trying to schedule a multi-day trip or an open-ended weekend.
+              </motion.p>
             </div>
-          </section>
+          </motion.section>
 
           {/* Use Cases */}
           <section>
-            <h2 className="text-3xl font-bold text-white mb-8">Built for Every Kind of Event</h2>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl font-bold text-white mb-8"
+            >
+              Built for Every Kind of Event
+            </motion.h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[
                 { title: 'The Weekend Getaway', desc: 'Finding overlap for a 3-day cabin trip among 8 busy friends.' },
                 { title: 'The Dinner Club', desc: 'Picking the single best evening this month for your recurring supper crew.' },
                 { title: 'The Remote Team', desc: 'Finding a week where the entire distributed startup can fly in for a company offsite.' }
               ].map((uc, i) => (
-                <div key={i} className="bg-dark-900 border border-dark-800 p-6 rounded-2xl relative overflow-hidden group hover:border-dark-700 transition-colors">
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.15, duration: 0.5 }}
+                  className="bg-dark-900 border border-dark-800 p-6 rounded-2xl relative overflow-hidden group hover:border-dark-700 hover:-translate-y-1 transition-all"
+                >
                   <h3 className="text-xl font-bold text-white mb-3 text-brand-400">{uc.title}</h3>
                   <p className="text-gray-400 leading-relaxed">{uc.desc}</p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </section>
 
           {/* Home FAQ */}
           <section className="max-w-3xl mx-auto pb-32">
-            <h2 className="text-3xl font-bold text-white mb-10 text-center">Frequently Asked Questions</h2>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl font-bold text-white mb-10 text-center"
+            >
+              Frequently Asked Questions
+            </motion.h2>
             <div className="space-y-4">
               {[
                 { q: 'How does this group availability tool work?', a: 'Create your event by selecting a range of possible dates. Share the generated link in your group chat. Everyone clicks the link and taps the days they are free. The app instantly generates a visual heatmap showing which date has the most overlap.' },
@@ -189,10 +229,17 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
                 { q: 'How many people can join an event?', a: 'There is no hard limit on participants. Whether you are finding a date for a 4-person D&D group or querying availability for a 50-person family reunion, the heatmap handles the data seamlessly.' },
                 { q: 'Will this work on mobile phones?', a: 'Yes, the entire interface is optimized for mobile tapping. Since most scheduling happens via links dropped in iMessage or WhatsApp, we ensured the availability grid is highly responsive on all screen sizes.' }
               ].map((faq, i) => (
-                <div key={i} className="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden p-6">
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.4 }}
+                  className="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden p-6"
+                >
                   <h3 className="font-bold text-gray-200 text-lg mb-2">{faq.q}</h3>
                   <p className="text-gray-400 leading-relaxed text-base md:text-lg">{faq.a}</p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </section>
