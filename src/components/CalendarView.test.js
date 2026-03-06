@@ -63,10 +63,15 @@ describe('CalendarView rendering', () => {
     expect(screen.getByText('Next →')).toBeInTheDocument();
   });
 
-  test('renders block type selection modes', () => {
+  test('does not render Flexible or Block selection modes', () => {
     renderCalendar();
-    expect(screen.getByText('Flexible')).toBeInTheDocument();
-    expect(screen.getByText('Block')).toBeInTheDocument();
+    expect(screen.queryByText('Flexible')).not.toBeInTheDocument();
+    expect(screen.queryByText('Block')).not.toBeInTheDocument();
+  });
+
+  test('renders range selection hint', () => {
+    renderCalendar();
+    expect(screen.getByText('Click a date to start a range. Click a selected day to deselect it.')).toBeInTheDocument();
   });
 
   test('pre-fills initial values', () => {
@@ -111,25 +116,89 @@ describe('CalendarView interactions', () => {
     fireEvent.change(nameInput, { target: { value: 'Alice' } });
 
     // Use fireEvent.submit on the form directly to bypass disabled-button constraint.
-    // The submit button is disabled when no days are selected; we test the handler itself.
     const form = nameInput.closest('form');
     fireEvent.submit(form);
 
     expect(mockAddNotification).toHaveBeenCalledWith(expect.objectContaining({ message: 'Please select at least one day' }));
   });
 
-  test('clicking a day in flexible mode toggles selection', () => {
+  test('clicking a single day selects it', () => {
     renderCalendar();
 
     const dayButton = screen.getByTestId('day-2024-06-10');
     fireEvent.click(dayButton);
 
-    // Day should be selected (has indigo class)
+    // Day should be selected
     expect(dayButton.className).toContain('text-white');
+  });
 
-    // Click again to deselect
-    fireEvent.click(dayButton);
+  test('clicking the same day twice deselects it (toggle)', () => {
+    renderCalendar();
+
+    const dayButton = screen.getByTestId('day-2024-06-10');
+    fireEvent.click(dayButton); // select
+    fireEvent.click(dayButton); // deselect (toggle)
+
+    // Day should be deselected
     expect(dayButton.className).not.toContain('text-white');
+  });
+
+  test('range selection: clicking start then end selects all days between', () => {
+    renderCalendar();
+
+    fireEvent.click(screen.getByTestId('day-2024-06-10')); // start
+    fireEvent.click(screen.getByTestId('day-2024-06-15')); // end
+
+    // All days 10-15 should be selected
+    for (let d = 10; d <= 15; d++) {
+      const dayBtn = screen.getByTestId(`day-2024-06-${String(d).padStart(2, '0')}`);
+      expect(dayBtn.className).toContain('text-white');
+    }
+
+    // Day 9 and 16 should NOT be selected
+    expect(screen.getByTestId('day-2024-06-09').className).not.toContain('text-white');
+    expect(screen.getByTestId('day-2024-06-16').className).not.toContain('text-white');
+
+    // Counter should show 6
+    const counter = screen.getByTestId('day-count');
+    expect(counter.textContent).toMatch(/6/);
+  });
+
+  test('reverse selection: end before start normalizes the range', () => {
+    renderCalendar();
+
+    fireEvent.click(screen.getByTestId('day-2024-06-15')); // start (later date)
+    fireEvent.click(screen.getByTestId('day-2024-06-10')); // end (earlier date)
+
+    // All days 10-15 should be selected (normalized)
+    for (let d = 10; d <= 15; d++) {
+      const dayBtn = screen.getByTestId(`day-2024-06-${String(d).padStart(2, '0')}`);
+      expect(dayBtn.className).toContain('text-white');
+    }
+  });
+
+  test('new range is additive — does not clear previous selection', () => {
+    renderCalendar();
+
+    // Select range 10-15
+    fireEvent.click(screen.getByTestId('day-2024-06-10'));
+    fireEvent.click(screen.getByTestId('day-2024-06-15'));
+
+    // Verify range is selected
+    expect(screen.getByTestId('day-2024-06-12').className).toContain('text-white');
+
+    // Click a new start date
+    fireEvent.click(screen.getByTestId('day-2024-06-20'));
+
+    // Old range should still be selected (additive)
+    expect(screen.getByTestId('day-2024-06-12').className).toContain('text-white');
+
+    // New start should also be selected
+    expect(screen.getByTestId('day-2024-06-20').className).toContain('text-white');
+
+    // Counter should show 7 (6 from old range + 1 new start)
+    const counter = screen.getByTestId('day-count');
+    expect(counter.textContent).toMatch(/7/);
   });
 
   test('days outside range are disabled', () => {
@@ -147,93 +216,6 @@ describe('CalendarView interactions', () => {
     expect(enabledDay).not.toBeDisabled();
   });
 
-  test('block mode selects consecutive days', () => {
-    renderCalendar({
-      startDate: '2024-06-01',
-      endDate: '2024-06-30'
-    });
-
-    // Switch to custom block mode and make it 3 days
-    const blockRadio = screen.getByText('Block');
-    fireEvent.click(blockRadio);
-
-    // The second number input on the page is the custom block size
-    const numberInputs = screen.getAllByRole('spinbutton');
-    fireEvent.change(numberInputs[1], { target: { value: '3' } });
-
-    // Click day 10
-    fireEvent.click(screen.getByTestId('day-2024-06-10'));
-
-    // Days 10, 11, 12 should all be selected
-    expect(screen.getByTestId('day-2024-06-10').className).toContain('text-white');
-    expect(screen.getByTestId('day-2024-06-11').className).toContain('text-white');
-    expect(screen.getByTestId('day-2024-06-12').className).toContain('text-white');
-  });
-
-  test('block mode gracefully handles selecting days near the end of the month boundary', () => {
-    // If a user selects a block of 5 days, but clicks the 28th of a 30-day month, it should safely cap at the 30th without exploding.
-    renderCalendar({
-      startDate: '2024-06-01',
-      endDate: '2024-06-30'
-    });
-
-    fireEvent.click(screen.getByText('Block'));
-    const numberInputs = screen.getAllByRole('spinbutton');
-    fireEvent.change(numberInputs[1], { target: { value: '5' } }); // 5 days
-
-    fireEvent.click(screen.getByTestId('day-2024-06-28'));
-
-    // Should only select 28, 29, 30. Should not crash.
-    expect(screen.getByTestId('day-2024-06-28').className).toContain('text-white');
-    expect(screen.getByTestId('day-2024-06-29').className).toContain('text-white');
-    expect(screen.getByTestId('day-2024-06-30').className).toContain('text-white');
-  });
-
-  test('custom block input safely bounds invalid duration lengths', () => {
-    // Tests the numeric pill logic to ensure it maxes out safely and falls back on invalid inputs.
-    renderCalendar();
-
-    fireEvent.click(screen.getByText('Block'));
-    const numberInputs = screen.getAllByRole('spinbutton');
-    const customBlockInput = numberInputs[1];
-
-    // Attempting a negative boundary limits gracefully
-    fireEvent.change(customBlockInput, { target: { value: '-5' } });
-    fireEvent.blur(customBlockInput);
-    expect(customBlockInput).toHaveValue(1);
-
-    // Attempting an extreme upper boundary
-    fireEvent.change(customBlockInput, { target: { value: '999' } });
-    fireEvent.blur(customBlockInput);
-    expect(customBlockInput).toHaveValue(30); // Max length of June
-  });
-
-  test('handles state transfer from Block mode back to Flexible smoothly', () => {
-    renderCalendar();
-
-    // Select 3 days in Block mode
-    fireEvent.click(screen.getByText('Block'));
-    const numberInputs = screen.getAllByRole('spinbutton');
-    fireEvent.change(numberInputs[1], { target: { value: '3' } });
-    fireEvent.click(screen.getByTestId('day-2024-06-10'));
-
-    expect(screen.getByTestId('day-2024-06-12').className).toContain('text-white');
-
-    // Switch back to Flexible
-    fireEvent.click(screen.getByText('Flexible'));
-
-    // The days should still be selected
-    expect(screen.getByTestId('day-2024-06-12').className).toContain('text-white');
-
-    // But now we can unclick just one
-    fireEvent.click(screen.getByTestId('day-2024-06-12'));
-    expect(screen.getByTestId('day-2024-06-12').className).not.toContain('text-white');
-    // Day 10 and 11 should remain selected
-    expect(screen.getByTestId('day-2024-06-11').className).toContain('text-white');
-  });
-
-
-
   test('saved days appear as selected', () => {
     renderCalendar({
       savedDays: ['2024-06-15', '2024-06-16']
@@ -243,26 +225,19 @@ describe('CalendarView interactions', () => {
     expect(screen.getByTestId('day-2024-06-16').className).toContain('text-white');
   });
 
-  test('saved days can be dynamically unselected', () => {
-    // Verifies that the new state unification logic allows turning off previously submitted dates.
+  test('saved days persist when new range started (additive)', () => {
     renderCalendar({
       savedDays: ['2024-06-15', '2024-06-16']
     });
 
     const savedDayBtn = screen.getByTestId('day-2024-06-15');
-
-    // Day should initially be selected because it's a saved day
     expect(savedDayBtn.className).toContain('text-white');
 
-    // Click to unselect
-    fireEvent.click(savedDayBtn);
+    // Click a new start date
+    fireEvent.click(screen.getByTestId('day-2024-06-20'));
 
-    // Day should no longer have the selected coloring
-    expect(savedDayBtn.className).not.toContain('text-white');
-
-    // The counter should also decrement down to 1
-    const counter = screen.getByTestId('day-count');
-    expect(counter.textContent).toMatch(/1/);
+    // Saved days should still be selected (additive)
+    expect(savedDayBtn.className).toContain('text-white');
   });
 
   test('shows day count including saved and new days', () => {
@@ -270,20 +245,19 @@ describe('CalendarView interactions', () => {
       savedDays: ['2024-06-15']
     });
 
-    // BUG-K: use data-testid for reliable query (avoids matching calendar day number buttons)
     const counter = screen.getByTestId('day-count');
     expect(counter).toBeInTheDocument();
     expect(counter.textContent).toMatch(/1/);
 
-    // Select another day
+    // Select a new range (additive to saved day)
     fireEvent.click(screen.getByTestId('day-2024-06-20'));
+    fireEvent.click(screen.getByTestId('day-2024-06-22'));
 
-    // Should show 2 days total
-    expect(screen.getByTestId('day-count').textContent).toMatch(/2/);
+    // Should show 4 days (15 saved + 20, 21, 22 new)
+    expect(screen.getByTestId('day-count').textContent).toMatch(/4/);
   });
 
   test('submit button is enabled when savedDays exist but no new days selected', () => {
-    // BUG-I: submit should be enabled when savedDays.length > 0 even if selectedDays is empty
     renderCalendar({
       savedDays: ['2024-06-15', '2024-06-16'],
       initialName: 'Alice'
@@ -401,66 +375,60 @@ describe('CalendarView edge cases', () => {
     expect(screen.getByText('January 2025')).toBeInTheDocument();
   });
 
-  test('block mode near end of range clips to range boundary', () => {
+  test('range selection clips to allowed date range boundary', () => {
     renderCalendar({
       startDate: '2024-06-01',
       endDate: '2024-06-05'
     });
 
-    // Switch to 5-day block
-    fireEvent.click(screen.getByText('Block'));
-    const numberInputs = screen.getAllByRole('spinbutton');
-    fireEvent.change(numberInputs[1], { target: { value: '5' } });
-
-    // Click day 3 - block would go 3,4,5 (only 3 days since range ends at 5)
+    // Select range that extends to the boundary
     fireEvent.click(screen.getByTestId('day-2024-06-03'));
+    fireEvent.click(screen.getByTestId('day-2024-06-05'));
 
     expect(screen.getByTestId('day-2024-06-03').className).toContain('text-white');
     expect(screen.getByTestId('day-2024-06-04').className).toContain('text-white');
     expect(screen.getByTestId('day-2024-06-05').className).toContain('text-white');
   });
 
-  test('block mode does not select days outside range', () => {
+  test('range selection does not select days outside allowed range', () => {
     renderCalendar({
       startDate: '2024-06-10',
       endDate: '2024-06-12'
     });
 
-    // Switch to 5-day block mode
-    fireEvent.click(screen.getByText('Block'));
-    const numberInputs = screen.getAllByRole('spinbutton');
-    fireEvent.change(numberInputs[1], { target: { value: '5' } });
-
-    // Click day 10 - should only select 10, 11, 12 (within range)
+    // Select the full allowed range
     fireEvent.click(screen.getByTestId('day-2024-06-10'));
+    fireEvent.click(screen.getByTestId('day-2024-06-12'));
 
     // Day 13 should NOT be selected (outside range and disabled)
     const day13 = screen.getByTestId('day-2024-06-13');
     expect(day13.className).not.toContain('text-white');
   });
 
-  // BUG-H (fixed): block mode now toggles — clicking a fully-selected block deselects it
-  test('block mode deselects days when all block days are already selected', () => {
+  test('range selection across month boundaries works via navigation', () => {
     renderCalendar({
-      startDate: '2024-06-01',
-      endDate: '2024-06-30'
+      startDate: '2024-06-28',
+      endDate: '2024-07-05'
     });
 
-    // Switch to 3-day block
-    fireEvent.click(screen.getByText('Block'));
-    const numberInputs = screen.getAllByRole('spinbutton');
-    fireEvent.change(numberInputs[1], { target: { value: '3' } });
+    // Click start date in June
+    fireEvent.click(screen.getByTestId('day-2024-06-28'));
 
-    // Click day 10 — selects 10, 11, 12
-    fireEvent.click(screen.getByTestId('day-2024-06-10'));
-    expect(screen.getByTestId('day-2024-06-10').className).toContain('text-white');
-    expect(screen.getByTestId('day-2024-06-11').className).toContain('text-white');
-    expect(screen.getByTestId('day-2024-06-12').className).toContain('text-white');
+    // Navigate to July
+    fireEvent.click(screen.getByText('Next →'));
 
-    // Click day 10 again — all 3 days already selected, so they should all deselect
-    fireEvent.click(screen.getByTestId('day-2024-06-10'));
-    expect(screen.getByTestId('day-2024-06-10').className).not.toContain('text-white');
-    expect(screen.getByTestId('day-2024-06-11').className).not.toContain('text-white');
-    expect(screen.getByTestId('day-2024-06-12').className).not.toContain('text-white');
+    // Click end date in July
+    fireEvent.click(screen.getByTestId('day-2024-07-03'));
+
+    // Verify July days are selected
+    expect(screen.getByTestId('day-2024-07-01').className).toContain('text-white');
+    expect(screen.getByTestId('day-2024-07-02').className).toContain('text-white');
+    expect(screen.getByTestId('day-2024-07-03').className).toContain('text-white');
+
+    // Navigate back to June and verify those days too
+    fireEvent.click(screen.getByText('← Prev'));
+    expect(screen.getByTestId('day-2024-06-28').className).toContain('text-white');
+    expect(screen.getByTestId('day-2024-06-29').className).toContain('text-white');
+    expect(screen.getByTestId('day-2024-06-30').className).toContain('text-white');
   });
 });
