@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getDatesBetween } from '../utils/overlap';
-import { Calendar, User, Mail, Clock, Sparkles, CalendarRange } from 'lucide-react';
+import { Calendar, User, Mail, Clock } from 'lucide-react';
 import { useNotification } from '../context/NotificationContext';
 import { MAX_PARTICIPANT_NAME_LENGTH } from '../utils/constants/validation';
 import { Link } from 'react-router-dom';
+import { useRangeSelection } from '../hooks/useRangeSelection';
 
-const DayCell = React.memo(({ day, currentYear, currentMonth, monthName, isDateInRange, isDaySelected, onDayClick }) => {
+const DayCell = React.memo(({ day, currentYear, currentMonth, monthName, isDateInRange, isDaySelected, isInActiveRange, isRangeStart, isRangeEnd, onDayClick }) => {
   if (!day) {
     return (
       <button
@@ -19,9 +20,26 @@ const DayCell = React.memo(({ day, currentYear, currentMonth, monthName, isDateI
   const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   const inRange = isDateInRange(dateStr);
   const selected = isDaySelected(day);
+  const inActiveRange = isInActiveRange(dateStr);
+  const isStart = isRangeStart(dateStr);
+  const isEnd = isRangeEnd(dateStr);
 
-  const ariaLabel = `${monthName}, day ${day}${selected ? ' (selected)' : ''}`;
+  const ariaLabel = `${monthName}, day ${day}${selected ? ' (selected)' : ''}${isStart ? ' (range start)' : ''}${isEnd ? ' (range end)' : ''}`;
   const testId = `day-${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  let cellClass = 'aspect-square p-2 text-sm md:text-base font-bold rounded-xl transition-all duration-200';
+
+  if (!inRange) {
+    cellClass += ' bg-dark-950 text-gray-600 cursor-not-allowed opacity-50';
+  } else if (isStart || isEnd) {
+    cellClass += ' bg-brand-500 text-white shadow-md shadow-brand-500/20 transform scale-[1.02] ring-2 ring-brand-400/40';
+  } else if (inActiveRange) {
+    cellClass += ' bg-brand-500/70 text-white shadow-sm shadow-brand-500/10';
+  } else if (selected) {
+    cellClass += ' bg-brand-500 text-white shadow-md shadow-brand-500/20 transform scale-[1.02]';
+  } else {
+    cellClass += ' bg-dark-800 border border-dark-700 hover:border-brand-500/50 hover:bg-brand-500/5 text-gray-300';
+  }
 
   return (
     <button
@@ -30,11 +48,7 @@ const DayCell = React.memo(({ day, currentYear, currentMonth, monthName, isDateI
       disabled={!inRange}
       aria-label={ariaLabel}
       data-testid={testId}
-      className={`
-        aspect-square p-2 text-sm md:text-base font-bold rounded-xl transition-all duration-200
-        ${!inRange ? 'bg-dark-950 text-gray-600 cursor-not-allowed opacity-50' : ''}
-        ${selected ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20 transform scale-[1.02]' : inRange ? 'bg-dark-800 border border-dark-700 hover:border-brand-500/50 hover:bg-brand-500/5 text-gray-300' : ''}
-      `}
+      className={cellClass}
     >
       {day}
     </button>
@@ -45,31 +59,33 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [duration, setDuration] = useState(initialDuration);
-  const [blockType, setBlockType] = useState('flexible');
-  const [selectedDays, setSelectedDays] = useState(savedDays || []);
   const [currentMonth, setCurrentMonth] = useState(new Date(startDate).getMonth());
   const [currentYear, setCurrentYear] = useState(new Date(startDate).getFullYear());
   const [loading, setLoading] = useState(false);
   const { addNotification } = useNotification();
   const [isDirty, setIsDirty] = useState(false);
 
+  const [localDuration, setLocalDuration] = useState(String(initialDuration));
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const dateRange = getDatesBetween(startDate, endDate);
+
+  const {
+    selectedDays,
+    rangeStart,
+    rangeEnd,
+    handleDayClick: rangeHandleDayClick,
+    syncFromSaved,
+  } = useRangeSelection(dateRange, savedDays || []);
+
   // Sync savedDays from parent if they are fetched after initial mount or updated post-submit
   // Only sync if there are no unsaved local changes to avoid clobbering user edits
   useEffect(() => {
     if (savedDays && !isDirty) {
-      setSelectedDays(savedDays);
+      syncFromSaved(savedDays);
     }
-  }, [savedDays, isDirty]);
-
-  const dateRange = getDatesBetween(startDate, endDate);
-
-  // Custom block size input state (if not flexible)
-  const [customBlockSize, setCustomBlockSize] = useState(() => {
-    return (initialDuration && initialDuration !== 'flexible') ? String(initialDuration) : '3';
-  });
-  const [localDuration, setLocalDuration] = useState(String(initialDuration));
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  }, [savedDays, isDirty, syncFromSaved]);
 
   const daysInMonth = (date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = (date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
@@ -86,7 +102,6 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
     days.push(i);
   }
 
-  // Helper hooks first, since they are used in dependency arrays
   const isDateInRange = useCallback((dateStr) => dateRange.includes(dateStr), [dateRange]);
 
   const isDaySelected = useCallback((day) => {
@@ -94,27 +109,24 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
     return selectedDays.includes(dateStr);
   }, [currentYear, currentMonth, selectedDays]);
 
-  const selectDayBlock = useCallback((startDateStr, blockSize) => {
-    const blockStart = new Date(startDateStr);
-    const blockDates = [];
+  const isInActiveRange = useCallback((dateStr) => {
+    if (!rangeStart || !rangeEnd) return false;
+    const [normStart, normEnd] = rangeStart <= rangeEnd ? [rangeStart, rangeEnd] : [rangeEnd, rangeStart];
+    return dateStr > normStart && dateStr < normEnd;
+  }, [rangeStart, rangeEnd]);
 
-    for (let i = 0; i < blockSize; i++) {
-      const d = new Date(blockStart);
-      d.setDate(d.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
-      if (isDateInRange(dateStr)) {
-        blockDates.push(dateStr);
-      }
-    }
+  const isRangeStart = useCallback((dateStr) => {
+    if (!rangeStart) return false;
+    if (!rangeEnd) return dateStr === rangeStart;
+    const normStart = rangeStart <= rangeEnd ? rangeStart : rangeEnd;
+    return dateStr === normStart;
+  }, [rangeStart, rangeEnd]);
 
-    setSelectedDays(prev => {
-      const allSelected = blockDates.length > 0 && blockDates.every(d => prev.includes(d));
-      if (allSelected) {
-        return prev.filter(d => !blockDates.includes(d));
-      }
-      return Array.from(new Set([...prev, ...blockDates]));
-    });
-  }, [isDateInRange]);
+  const isRangeEnd = useCallback((dateStr) => {
+    if (!rangeEnd) return false;
+    const normEnd = rangeStart <= rangeEnd ? rangeEnd : rangeStart;
+    return dateStr === normEnd;
+  }, [rangeStart, rangeEnd]);
 
   const handleDayClick = useCallback((day) => {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -122,15 +134,8 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
     if (!isDateInRange(dateStr)) return;
 
     setIsDirty(true);
-
-    if (blockType === 'flexible') {
-      setSelectedDays(prev =>
-        prev.includes(dateStr) ? prev.filter(d => d !== dateStr) : [...prev, dateStr]
-      );
-    } else {
-      selectDayBlock(dateStr, parseInt(customBlockSize));
-    }
-  }, [currentYear, currentMonth, blockType, customBlockSize, isDateInRange, selectDayBlock]);
+    rangeHandleDayClick(dateStr);
+  }, [currentYear, currentMonth, isDateInRange, rangeHandleDayClick]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -151,8 +156,8 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
         name,
         email,
         duration: singleDay ? 1 : parseInt(localDuration),
-        blockType: singleDay ? 'flexible' : (blockType === 'flexible' ? 'flexible' : String(customBlockSize)),
-        selectedDays: selectedDays.sort()
+        blockType: 'flexible',
+        selectedDays: [...selectedDays].sort()
       });
       setIsDirty(false);
     } catch (err) {
@@ -177,7 +182,7 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
         name,
         email,
         duration: singleDay ? 1 : parseInt(localDuration),
-        blockType: singleDay ? 'flexible' : (blockType === 'flexible' ? 'flexible' : String(customBlockSize)),
+        blockType: 'flexible',
         selectedDays: savedDays // "Save Details" doesn't submit days, so keep the existing ones
       });
     } catch (err) {
@@ -275,51 +280,6 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
             </div>
           )}
 
-          {/* Segmented Control - Selection Mode */}
-          <div className="flex items-center bg-dark-800 p-1 rounded-full border border-dark-700 shrink-0">
-            <button
-              type="button"
-              onClick={() => setBlockType('flexible')}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all flex items-center gap-1.5 ${blockType === 'flexible'
-                ? 'bg-dark-700 text-brand-400 shadow-sm ring-1 ring-brand-500/20'
-                : 'text-gray-500 hover:text-gray-300'
-                }`}
-            >
-              <Sparkles size={16} className={blockType === 'flexible' ? 'text-brand-400' : 'text-gray-500'} />
-              Flexible
-            </button>
-            <button
-              type="button"
-              onClick={() => setBlockType('custom')}
-              className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${blockType !== 'flexible'
-                ? 'bg-dark-700 text-brand-400 shadow-sm ring-1 ring-brand-500/20'
-                : 'text-gray-500 hover:text-gray-300'
-                }`}
-            >
-              <CalendarRange size={16} className={blockType !== 'flexible' ? 'text-brand-400' : 'text-gray-500'} />
-              Block
-
-              {/* Embedded Block Size Input */}
-              {blockType !== 'flexible' && (
-                <input
-                  type="number"
-                  min="1"
-                  max={dateRange.length}
-                  value={customBlockSize}
-                  onChange={(e) => setCustomBlockSize(e.target.value)}
-                  onBlur={() => {
-                    let val = parseInt(customBlockSize);
-                    if (isNaN(val) || val < 1) val = 1;
-                    if (val > dateRange.length) val = dateRange.length;
-                    setCustomBlockSize(String(val));
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-8 text-center bg-brand-500/10 font-bold text-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400 rounded-md p-0"
-                />
-              )}
-            </button>
-          </div>
-
           {/* Save Details Only Pill */}
           <button
             type="button"
@@ -355,6 +315,13 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
           </button>
         </div>
 
+        {/* Range selection hint */}
+        <div className="text-center text-xs text-gray-500 mb-3">
+          {!rangeStart || (rangeStart && rangeEnd)
+            ? 'Click a start date, then an end date to select a range'
+            : 'Now click an end date to complete your range'}
+        </div>
+
         <div className="grid grid-cols-7 gap-1 md:gap-2 mb-4">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
             <div key={day} className="text-center font-bold text-gray-500 text-xs py-2 uppercase tracking-wide">
@@ -370,6 +337,9 @@ function CalendarView({ startDate, endDate, onSubmit, savedDays = [], initialNam
               monthName={monthName}
               isDateInRange={isDateInRange}
               isDaySelected={isDaySelected}
+              isInActiveRange={isInActiveRange}
+              isRangeStart={isRangeStart}
+              isRangeEnd={isRangeEnd}
               onDayClick={handleDayClick}
             />
           ))}
