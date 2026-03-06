@@ -12,6 +12,10 @@ const DocumentationPage = React.lazy(() => import('./features/docs/Documentation
 const PrivacyPolicy = React.lazy(() => import('./features/legal/PrivacyPolicy'));
 const TermsOfService = React.lazy(() => import('./features/legal/TermsOfService'));
 const LandingPage = React.lazy(() => import('./features/landing/LandingPage'));
+const BlogIndex = React.lazy(() => import('./features/blog/BlogIndex'));
+const BlogPost = React.lazy(() => import('./features/blog/BlogPost'));
+const CompareHub = React.lazy(() => import('./features/landing/CompareHub'));
+const ComparePageWrapper = React.lazy(() => import('./features/landing/ComparePageWrapper'));
 
 function RootHandler() {
   const [searchParams] = useSearchParams();
@@ -202,7 +206,14 @@ function MainLayout() {
             <Route path="/team-scheduling" element={<LandingPage type="team" />} />
             <Route path="/party-planner" element={<LandingPage type="party" />} />
             <Route path="/game-night-planner" element={<LandingPage type="gamenight" />} />
+            <Route path="/christmas-dinner-planner" element={<LandingPage type="christmas" />} />
+            <Route path="/summer-vacation-planner" element={<LandingPage type="summer" />} />
+            <Route path="/family-reunion-planner" element={<LandingPage type="family" />} />
+            <Route path="/compare" element={<CompareHub />} />
+            <Route path="/compare/:competitor" element={<ComparePageWrapper />} />
             <Route path="/docs" element={<DocumentationPage onBack={() => navigate('/')} />} />
+            <Route path="/blog" element={<BlogIndex onBack={() => navigate('/')} />} />
+            <Route path="/blog/:slug" element={<BlogPost onBack={() => navigate('/blog')} />} />
             <Route path="/privacy" element={<PrivacyPolicy onBack={() => navigate('/')} />} />
             <Route path="/terms" element={<TermsOfService onBack={() => navigate('/')} />} />
           </Routes>

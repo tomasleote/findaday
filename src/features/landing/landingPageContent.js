@@ -3,20 +3,28 @@ export const landingPagesConfig = {
         slug: 'vacation-planner',
         title: 'Group Vacation Planner — Find When Everyone\'s Free | Find A Day',
         metaDescription: 'Planning a group trip? Everyone marks their free dates on the calendar. Find A Day finds the best overlapping vacation window instantly. Free, no account needed.',
-        h1: 'Plan Your Group Vacation Without the Chaos',
-        subtitle: 'Everyone marks their available travel dates. The algorithm finds the perfect window where the most people overlap. From weekend getaways to two-week adventures.',
+        h1: 'The Best Group Vacation Date Planner',
+        subtitle: 'Find overlapping vacation dates without the group chat chaos. Coordinate multi-day travel windows instantly.',
+        ctaText: 'Plan Your Group Vacation',
         emoji: '🌴',
         problemSection: [
-            'You want to plan a trip with friends. You send "when works for everyone?" in the group chat. Twenty messages and three days later, half the group hasn\'t replied and the other half gave conflicting dates. Sound familiar?',
-            'Traditional scheduling tools like Doodle are built for one-hour meetings, not week-long vacations. When you\'re coordinating a multi-day trip across 8-15 people with different vacation schedules, work commitments, and travel constraints, you need a tool that understands date ranges — not time slots.',
-            'Find A Day was built for exactly this. Set your potential travel window (say, June through August), share one link, and let everyone mark which days they\'re free. The heatmap instantly shows you where the most people overlap. No sign-up, no ads, no back-and-forth.'
+            'Planning a group trip with friends or extended family is highly stressful. When you\'re trying to coordinate a vacation across 8 to 15 people, you\'re battling different PTO balances, school schedules, and work commitments.',
+            'Often, the organizer is forced to build a massive spreadsheet or send a barrage of texts trying to find an overlapping window. You send "when works for everyone?" and wait three days for conflicting answers.'
         ],
-        showComparison: false,
+        whyToolsFail: 'If you try using a standard hourly poll to plan group trip dates, it breaks immediately. You need a tool that understands date ranges. When asking "which week in August works for our beach trip?", scheduling tools built for corporate zoom meetings fail. You need a dedicated group vacation date planner that visualizes multi-day availability beautifully.',
+        useCases: [
+            { title: 'The Annual Friend Trip', description: 'Finding a 5-day overlap in the summer where all 8 friends can finally take off work simultaneously.' },
+            { title: 'Family Reunions', description: 'Coordinating a massive multi-generational gathering by seeing which weekend works for the highest percentage of the family tree.' },
+            { title: 'Festival Squads', description: 'Narrowing down which travel window lets everyone attend the 3-day music festival together.' },
+        ],
+        showComparison: true,
         faqs: [
-            { question: 'How does Find A Day work for vacation planning?', answer: 'Create an event with your travel date range, share the link with your group, and everyone marks their available days on a visual calendar. The algorithm calculates the best overlapping window where the most people are free.' },
-            { question: 'Do participants need to create an account?', answer: 'No. Participants only need the shared link. They enter their name, mark their available days, and submit. No sign-up, no email required.' },
-            { question: 'Can Find A Day handle multi-day vacation windows?', answer: 'Yes — this is Find A Day\'s core strength. Unlike Doodle or When2Meet which focus on single time slots, Find A Day is built for multi-day date ranges. It finds the best 3-day, 5-day, 7-day, or any-length window across your group.' },
-            { question: 'Is Find A Day free for vacation planning?', answer: 'Yes, completely free. No ads, no premium tier required, no participant limits. Create unlimited events.' }
+            { question: 'How do I find overlapping vacation dates for a large group?', answer: 'Create an event with your broad travel window (for example, the entire month of July). Share the link. Have everyone highlight the specific days they can take off. The calendar heatmap will instantly reveal the block of days where the most people are free.' },
+            { question: 'Does this group vacation planner cost money?', answer: 'No. Our group vacation date planner is completely free to use. There are no premium tiers required to schedule multi-day events, and no limits on how many friends can participate in your poll.' },
+            { question: 'Do my friends need an account to mark their travel dates?', answer: 'No. We know getting a group to agree is hard enough without forcing them to register for an app. They just click your link, type their name, tap their free dates on their phone, and hit save.' },
+            { question: 'Can I see exactly who voted for which dates?', answer: 'Yes. While the main view shows a colored heatmap (darker colors mean more people are free), you can easily click into any specific day or date range to see exactly who can and cannot make that specific window.' },
+            { question: 'What happens if no single week works for everyone?', answer: 'The heatmap is designed to show you the best possible overlap. If 100% attendance isn\'t mathematically possible, it clearly highlights the dates where you can get 80% or 90% of the group together, so you can make an informed decision.' },
+            { question: 'Is it better to use this than a standard Doodle poll?', answer: 'Yes. Standard polls are designed for discrete time slots (e.g., 2:00 PM on Tuesday). A group vacation planner like Find A Day is built for continuous blocks of days, making it vastly superior for coordinating travel.' }
         ],
         relatedPages: ['doodle-alternative', 'group-event-planner', 'team-scheduling'],
     },
@@ -24,26 +32,34 @@ export const landingPagesConfig = {
         slug: 'doodle-alternative',
         title: 'Best Free Doodle Alternative 2026 | Find A Day',
         metaDescription: 'Tired of Doodle\'s ads and paywalls? Find A Day is a free, ad-free group scheduling tool with visual heatmaps, multi-day support, and zero sign-up.',
-        h1: 'The Free Doodle Alternative You\'ve Been Looking For',
-        subtitle: 'No ads. No account required. No paywalled features. Find A Day is what Doodle used to be — but better, with visual heatmaps and multi-day event support.',
+        h1: 'The Best Free Doodle Alternative (No Ads)',
+        subtitle: 'A group availability tool that doesn\'t force your friends to watch ads or create accounts to respond.',
+        ctaText: 'Switch from Doodle Today',
         emoji: '✨',
         problemSection: [
-            'Doodle was once the go-to tool for group scheduling. But with many users reporting frustrating ads and formerly free features now locked behind a paid tier, users are actively searching for alternatives.',
-            'The core problem Doodle solves — "when is everyone free?" — is still valid. But Doodle\'s execution has deteriorated. You shouldn\'t need a subscription to schedule a dinner with friends. You shouldn\'t have to watch ads while trying to coordinate a team offsite.',
-            'Find A Day takes Doodle\'s original promise and does it properly. Visual availability heatmaps show overlap at a glance. Multi-day date ranges support vacations and retreats, not just one-hour meetings. And it\'s genuinely free — no ads, no account for participants, no limits.'
+            'Doodle used to be the gold standard for group scheduling. Unfortunately, over the years, the free tier has become incredibly frustrating.',
+            'Today, if you send a poll to schedule a simple dinner, your friends are met with heavy advertisements, pop-ups, and a cluttered interface. Essential features that used to be free are now locked behind a paid subscription.'
+        ],
+        whyToolsFail: 'People searching for a doodle alternative no ads want the magic of the original concept back: simple, fast, zero-friction scheduling. Find A Day restores that. We offer a completely free scheduling tool without ads, no paywalls, and no account required for participants. While Doodle remains fixated on single-day time slots, we built our tool around modern multi-day heatmaps that handle everything from a dinner date to a two-week vacation.',
+        useCases: [
+            { title: 'Casual Get-togethers', description: 'Quickly finding out which night this week the group can go to the movies, without making them navigate pop-ups.' },
+            { title: 'Volunteer Coordination', description: 'Polling a large group of parents or volunteers where you absolutely need a high response rate — meaning zero friction is required.' },
+            { title: 'Ad-free Professional Use', description: 'Sending a clean, professional scheduling link to clients or club members without embarrassing third-party advertisements plastering the page.' }
         ],
         showComparison: true,
         faqs: [
-            { question: 'Why switch from Doodle to Find A Day?', answer: 'Find A Day is completely free with no ads, supports multi-day date ranges (not just time slots), requires no account for participants, and shows visual heatmaps of group availability. Doodle\'s free tier is ad-heavy and increasingly limited.' },
-            { question: 'Is Find A Day really free?', answer: 'Yes. Find A Day\'s core features are completely free — unlimited events, unlimited participants, no ads, no account required for voters. No bait-and-switch.' },
-            { question: 'Does Find A Day work for meetings like Doodle?', answer: 'Find A Day excels at finding the best date for any group event. For single-day events like meetings, dinners, or game nights, it works perfectly. For multi-day events like vacations and retreats, it\'s significantly better than Doodle.' },
-            { question: 'Can I import my Doodle polls into Find A Day?', answer: 'There\'s no direct import, but creating a new Find A Day event takes under 60 seconds. Share the link in the same group chat and you\'re up and running.' }
+            { question: 'Is Find A Day actually a free Doodle alternative with no ads?', answer: 'Yes. Find A Day is completely free to use and entirely ad-free. We believe that finding a day that works for everyone shouldn\'t require your friends to navigate through banner ads and pop-ups.' },
+            { question: 'Do participants have to sign up to submit their availability?', answer: 'No. This is a doodle alternative no sign up required. Anyone with the link can enter their name, select the dates they are free on the calendar, and submit their response in seconds.' },
+            { question: 'What makes this group scheduler better than Doodle?', answer: 'Aside from being ad-free and registration-free, Find A Day specializes in multi-day events. If you need to find an overlapping 4-day weekend for a trip, our visual heatmap handles it perfectly, whereas Doodle struggles with anything other than hourly slots.' },
+            { question: 'Can I schedule single-day events like a dinner or game night?', answer: 'Absolutely. Whether you are looking for one specific evening or a 5-day travel block, the calendar interface scales to your needs. Just set the range and let the algorithm find the best day.' },
+            { question: 'Is there a limit to how many polls I can create?', answer: 'No. There are no arbitrary limits. You can create as many events as you need, and invite as many participants as required to find your overlapping availability.' },
+            { question: 'Will it work on my friends\' phones?', answer: 'Yes. A major complaint about older scheduling tools is their poor mobile experience. Find A Day is built from the ground up to be fully responsive, making it incredibly easy to fill out dates right from a smartphone.' }
         ],
         relatedPages: ['when2meet-alternative', 'vacation-planner', 'group-event-planner'],
     },
     'when2meet': {
         slug: 'when2meet-alternative',
-        title: 'When2Meet Alternative That Works on Mobile | Find A Day',
+        title: 'Best When2Meet Alternative 2026 That Works on Mobile | Find A Day',
         metaDescription: 'When2Meet, but modern. Find A Day works on every device, supports multi-day events, and doesn\'t abandon you after the poll.',
         h1: 'When2Meet, But Built for 2026',
         subtitle: 'Same zero-friction approach you love. Modern UI that actually works on phones. Plus multi-day event support and a workflow that doesn\'t end at the heatmap.',
@@ -161,5 +177,65 @@ export const landingPagesConfig = {
             { question: 'How is Find A Day better than a poll for game nights?', answer: 'Polls show you who voted for what. Find A Day shows you a visual heatmap of everyone\'s availability, making it instantly clear which evening has the most overlap — especially useful when you need a minimum number of players.' }
         ],
         relatedPages: ['find-a-day-for-dinner', 'when2meet-alternative', 'group-event-planner'],
+    },
+    'christmas': {
+        slug: 'christmas-dinner-planner',
+        title: 'Free Christmas Dinner Date Planner | Find A Day',
+        metaDescription: 'Coordinating a holiday gathering or Christmas dinner? Stop arguing in the group chat. Everyone marks free dates; we find the best overlap instantly.',
+        h1: 'Plan the Perfect Christmas Dinner Date',
+        subtitle: 'The holidays are stressful enough. Easily coordinate a date for your friend group\'s Christmas dinner or holiday party without the 50-message debate.',
+        emoji: '🎄',
+        problemSection: [
+            'December is the busiest month of the year. Trying to organize a "Friendsmas" or a large family holiday dinner means fighting against company parties, travel schedules, and general seasonal exhaustion.',
+            'Group chats inevitably devolve into "I can do the 12th or 15th, but not the 18th" until the organizer gives up.',
+            'Find A Day solves the holiday puzzle. Set a date range, share the festive link, and watch the visual heatmap reveal the one night that actually works for everyone.'
+        ],
+        showComparison: false,
+        faqs: [
+            { question: 'Do my guests need accounts to RSVP with dates?', answer: 'No. Just send the link in your holiday group chat. Guests tap their free evenings on their phones and you see the results.' },
+            { question: 'Is this better than a standard Doodle poll?', answer: 'Yes. Our visual calendar is much easier to use, entirely free, and contains absolutely zero disruptive advertisements.' },
+            { question: 'Can I restrict the dates they can vote on?', answer: 'Yes, you specify the exact date range (for example, Dec 1st to Dec 23rd) so guests only vote on the window you want to host.' }
+        ],
+        relatedPages: ['find-a-day-for-dinner', 'party-planner', 'group-event-planner'],
+    },
+    'summer': {
+        slug: 'summer-vacation-planner',
+        title: 'Group Summer Vacation Date Planner | Find A Day',
+        metaDescription: 'Planning a group summer trip? Don\'t guess when everyone is free. Share a link, collect multi-day availability, and book your group vacation hassle-free.',
+        h1: 'Coordinate the Best Group Summer Vacation',
+        subtitle: 'Find the perfect week for a beach house trip, Euro-summer, or cabin getaway across 8+ different work schedules. Free, fast, and visual.',
+        emoji: '☀️',
+        problemSection: [
+            'Summer weekends book up incredibly fast. If you try to plan a group vacation in June by asking "what week works for you?" in February, you will never get a straight answer.',
+            'You cannot book flights or reserve that perfect Airbnb until you have a locked-in date window. Text threads are useless for visualizing 5-to-7 day overlapping blocks across multiple people.',
+            'Find A Day is designed specifically for multi-day travel. Select the whole summer, share the link, and let your group highlight their unbroken free days. The heatmap instantly reveals your travel window.'
+        ],
+        showComparison: false,
+        faqs: [
+            { question: 'How is this different from hourly schedulers?', answer: 'Find A Day natively supports multi-day selections perfectly. Participants simply drag across the days they can travel, creating a clear visual overlap.' },
+            { question: 'Is it free for large travel groups?', answer: 'Yes, Find A Day is completely free regardless of whether 3 people or 30 people are joining the trip.' },
+            { question: 'Can I use this for weekend getaways?', answer: 'Absolutely. It is perfect for finding a shared 3-day weekend among friends.' }
+        ],
+        relatedPages: ['vacation-planner', 'group-event-planner', 'team-scheduling'],
+    },
+    'family': {
+        slug: 'family-reunion-planner',
+        title: 'Family Reunion Date Scheduler | Find A Day',
+        metaDescription: 'Organizing a massive family reunion? Find A Day handles availability for unlimited participants easily. Share one link, find the perfect reunion weekend.',
+        h1: 'Find the Best Weekend for the Family Reunion',
+        subtitle: 'Stop trying to wrangle 40 different cousins, aunts, and uncles via email chains. Find the weekend that works for the most relatives with one simple link.',
+        emoji: '👨‍👩‍👧‍👦',
+        problemSection: [
+            'Planning a family reunion is a logistical nightmare. You are trying to find a date that accommodates different school districts, cross-country travel constraints, and varying budgets.',
+            'Email chains break down immediately. Sending out multiple surveys is exhausting. Often, the organizer just picks a date arbitrarily, resulting in half the family being unable to attend.',
+            'Find A Day makes it democratic and visual. Set the target month, email the link to the family, and watch the heatmap show exactly which weekend accommodates the highest percentage of the bloodline.'
+        ],
+        showComparison: false,
+        faqs: [
+            { question: 'Is there a limit to how many family members can vote?', answer: 'No limit at all. It handles 5 people or 100 people effortlessly.' },
+            { question: 'Will less tech-savvy relatives be able to use it?', answer: 'Yes. The interface is purposefully simple: no account creation, no passwords. Just type a name and click the free days.' },
+            { question: 'What if we can\'t find a date where 100% of people can come?', answer: 'The heatmap clearly shows you the dates with the highest density of availability, allowing you to confidently pick the date that works for the vast majority' }
+        ],
+        relatedPages: ['group-event-planner', 'vacation-planner', 'party-planner'],
     }
 };
