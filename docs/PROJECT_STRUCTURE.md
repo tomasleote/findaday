@@ -17,16 +17,33 @@ vacation-scheduler/
 │   │   ├── AdminPanel.js         # Admin dashboard & controls (12.7 KB)
 │   │   ├── ParticipantView.js    # Participant page wrapper (5.2 KB)
 │   │   ├── CalendarView.js       # Calendar UI & date selection (10 KB)
+│   │   ├── SlidingOverlapCalendar.jsx # Advanced calendar with voting (18 KB)
+│   │   ├── VotePanel.jsx         # Vote display & voting controls (3.5 KB)
 │   │   ├── ResultsDisplay.js     # Overlap results visualization (2.5 KB)
 │   │   └── ParticipantForm.js    # Form component wrapper (128 B)
 │   │
+│   ├── features/                 # Feature-specific components
+│   │   ├── admin/
+│   │   │   ├── AdminPage.jsx     # Admin layout & voting management (15 KB)
+│   │   │   ├── VotingSetup.jsx   # Propose candidate periods (4 KB)
+│   │   │   └── VotingResults.jsx # Live vote tracking & results (5 KB)
+│   │   ├── landing/
+│   │   │   └── landingPageContent.js # SEO landing page content (8 KB)
+│   │   └── services/
+│   │       └── pollService.js    # Firebase poll operations (3 KB)
+│   │
 │   └── utils/                    # Utility functions
 │       ├── overlap.js            # Overlap calculation algorithm (2.4 KB)
-│       └── export.js             # CSV export functionality (1.5 KB)
+│       ├── export.js             # CSV export functionality (1.5 KB)
+│       └── dateUtils.js          # Date formatting & range utilities (2 KB)
 │
-├── functions/                    # Firebase Cloud Functions
+├── functions/                    # Firebase Cloud Functions (legacy)
 │   ├── index.js                  # Email reminders & scheduled tasks (2.6 KB)
 │   └── package.json              # Functions dependencies
+│
+├── api/                          # Vercel Serverless Functions
+│   ├── send-vote-invite.js       # Send voting invitation emails (3.2 KB)
+│   └── send-vote-result.js       # Send result email with calendar ICS (4.1 KB)
 │
 ├── public/                       # Static files
 │   └── index.html                # HTML entry point
@@ -116,6 +133,35 @@ vacation-scheduler/
   - Visual feedback
 - **Line Count**: ~280 lines
 
+### src/components/SlidingOverlapCalendar.jsx
+- **Role**: Advanced calendar with heatmap & voting
+- **Responsibilities**:
+  - Display availability heatmap (color-coded by participation %)
+  - Show candidate periods during voting
+  - Handle period selection
+  - Render vote counts and participant details
+- **Key Features**:
+  - Heatmap visualization
+  - Candidate highlighting during polls
+  - Spotlight fade effect for non-selected periods
+  - Responsive details panel with vote tracking
+  - forwardRef to support imperative `clearSelection()` from parent
+- **Line Count**: ~550 lines
+
+### src/components/VotePanel.jsx
+- **Role**: Vote casting interface
+- **Responsibilities**:
+  - Display vote count & percentage bar
+  - Show list of voters
+  - Handle vote submission
+  - Provide visual feedback on voted status
+- **Key Features**:
+  - Real-time vote counts
+  - Voter identification
+  - Single vs. multiple choice voting modes
+  - Vote toggle/removal
+- **Line Count**: ~113 lines
+
 ### src/components/ResultsDisplay.js
 - **Role**: Results visualization
 - **Responsibilities**:
@@ -161,17 +207,105 @@ vacation-scheduler/
   - Trigger browser download
 - **Line Count**: ~55 lines
 
-### functions/index.js
+### src/features/admin/AdminPage.jsx
+- **Role**: Admin dashboard wrapper
+- **Responsibilities**:
+  - Manage voting setup and results display
+  - Handle poll lifecycle (start, close, send results)
+  - Auto-scroll to voting results when poll starts
+  - Coordinate admin voting actions
+- **Key Features**:
+  - VotingSetup component for proposing candidates
+  - VotingResults component for live vote tracking
+  - Heatmap scroll management via useRef
+- **Line Count**: ~300 lines
+
+### src/features/admin/VotingSetup.jsx
+- **Role**: Candidate period proposal interface
+- **Responsibilities**:
+  - Allow admin to select & propose 2-5 date ranges as voting candidates
+  - Add candidates to poll
+  - Clear selection after adding
+  - Persist candidates to Firebase
+- **Key Features**:
+  - Calendar period selection
+  - Candidate list display
+  - "Add as Candidate" button
+  - Auto-clear selection via ref
+- **Line Count**: ~150 lines
+
+### src/features/admin/VotingResults.jsx
+- **Role**: Real-time voting results display
+- **Responsibilities**:
+  - Show live vote counts per candidate
+  - Display voter identities and their choices
+  - Allow admin to close poll
+  - Trigger result email sending
+- **Key Features**:
+  - Real-time Firebase subscription
+  - Vote count visualization
+  - Voter participation tracking
+  - "Send Results" button with email integration
+- **Line Count**: ~200 lines
+
+### src/features/services/pollService.js
+- **Role**: Firebase poll operations
+- **Responsibilities**:
+  - Subscribe to active polls
+  - Submit votes to Firebase
+  - Close polls
+  - Fetch poll status
+- **Methods**:
+  - `subscribeToPoll()` - Real-time poll listener
+  - `submitVote()` - Cast or update vote
+  - `closePoll()` - End voting session
+  - `startPoll()` - Create new poll
+- **Line Count**: ~120 lines
+
+### functions/index.js (Firebase Cloud Functions)
 - **Role**: Cloud Functions
 - **Responsibilities**:
   - Handle email reminders
   - Clean up old groups
   - Log events
 - **Functions**:
-  - `sendReminder()` - HTTP endpoint for emails
+  - `sendReminder()` - HTTP endpoint for reminder emails
   - `onGroupCreated()` - Trigger on group creation
   - `cleanupOldGroups()` - Scheduled cleanup job
 - **Line Count**: ~100 lines
+
+### api/send-vote-invite.js (Vercel Serverless Function)
+- **Role**: Voting invitation email sender
+- **Responsibilities**:
+  - Send email invitations when poll starts
+  - Include voting link and candidate information
+  - Use Nodemailer with Gmail SMTP
+- **Input**:
+  - `groupId`: Group identifier
+  - `groupName`: Group name for email
+  - `participants`: Array of participant emails
+  - `baseUrl`: Frontend base URL for voting link
+- **Output**: Success/error response with sent count
+- **Line Count**: ~80 lines
+
+### api/send-vote-result.js (Vercel Serverless Function)
+- **Role**: Voting result email with calendar invite
+- **Responsibilities**:
+  - Send winning date to all participants
+  - Generate ICS calendar file (RFC 5545 format)
+  - Attach calendar invite to email
+  - Format results email with brand styling
+- **Input**:
+  - `groupId`: Group identifier
+  - `winnerStartDate`, `winnerEndDate`: Winning date range
+  - `participants`: Array of participant objects with emails
+  - `baseUrl`: Frontend URL for link
+- **Output**: Success/error response with sent count
+- **Key Logic**:
+  - `formatICSDate()` - Convert dates to ICS format
+  - `generateICS()` - Create VCALENDAR RFC 5545 structure
+  - Exclusive end date for all-day events
+- **Line Count**: ~137 lines
 
 ## Configuration Files Explained
 
@@ -321,24 +455,32 @@ Live at your-project.web.app
 
 ## Future Enhancement Points
 
-1. **Authentication**: Add Firebase Auth for admin login
-2. **Mobile App**: React Native sharing same backend
-3. **Advanced Analytics**: Track popular dates, success rates
-4. **Notifications**: Real-time push notifications
-5. **Integrations**: Calendar sync (Google Calendar, iCal)
-6. **Payment**: Premium features with Stripe
-7. **Localization**: Multi-language support
-8. **Database Migration**: Move to Cloud Firestore if needed
+1. **Voting Enhancements**:
+   - Weighted voting by participant priority
+   - Preference-based voting (rank candidates)
+   - Anonymous voting toggle
+   - Voting deadlines with auto-close
+   - Voting reminders/notifications
+2. **Authentication**: Add Firebase Auth for admin login
+3. **Mobile App**: React Native sharing same backend
+4. **Advanced Analytics**: Track poll participation, voting patterns, success rates
+5. **Notifications**: Real-time push notifications for voting invites
+6. **Integrations**: Calendar sync (Google Calendar, iCal)
+7. **Payment**: Premium features with Stripe
+8. **Localization**: Multi-language support
+9. **Database Migration**: Move to Cloud Firestore if needed
 
 ## Total Project Statistics
 
-- **Lines of Code**: ~1,200 (excluding comments)
-- **Components**: 5 functional components
-- **Utility Functions**: 8 core functions
-- **Cloud Functions**: 3 functions
-- **Documentation**: 5 markdown files (~30 KB)
-- **Dependencies**: 6 production, 2 dev
-- **Database Collections**: 1 (groups)
-- **API Endpoints**: 1 (send reminder)
+- **Lines of Code**: ~2,100 (excluding comments)
+- **Components**: 7 main components + 3 voting feature components
+- **Feature Modules**: 3 (admin, landing, services)
+- **Utility Functions**: 12 core functions
+- **Cloud Functions**: 3 Firebase functions
+- **Serverless Functions**: 2 Vercel API endpoints
+- **Documentation**: 7 markdown files (~50 KB)
+- **Dependencies**: 7 production, 2 dev
+- **Database Collections**: 1 (groups with nested participants & polls)
+- **API Endpoints**: 3 (send reminder, send vote invite, send vote result)
 - **Responsive**: Yes (mobile-first)
 - **Accessibility**: WCAG considerations in place

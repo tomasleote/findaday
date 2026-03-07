@@ -10,6 +10,7 @@
 │  ┌──────────────────┐         ┌──────────────────┐           │
 │  │   Admin Panel    │         │ Participant View │           │
 │  │  (Create Group)  │         │  (Join Group)    │           │
+│  │  (Start Poll)    │         │  (Vote)          │           │
 │  └────────┬─────────┘         └────────┬─────────┘           │
 │           │                            │                     │
 │           │    ┌──────────────────────┤                      │
@@ -17,6 +18,7 @@
 │  ┌────────▼────▼────────────────────────┐                   │
 │  │     Firebase Realtime Database       │                   │
 │  │  - Groups & Participants             │                   │
+│  │  - Polls & Votes (real-time)         │                   │
 │  │  - Real-time sync                    │                   │
 │  └──────────────┬───────────────────────┘                   │
 │                 │                                             │
@@ -24,12 +26,14 @@
 │  │    Overlap Calculation Engine        │                   │
 │  │  - Period matching algorithm         │                   │
 │  │  - Availability percentage calc      │                   │
+│  │  - Vote counting & results           │                   │
 │  └──────────────┬───────────────────────┘                   │
 │                 │                                             │
 │  ┌──────────────▼───────────────────────┐                   │
 │  │      Results & Export                │                   │
 │  │  - CSV generation                    │                   │
-│  │  - Visualization                     │                   │
+│  │  - Vote results visualization        │                   │
+│  │  - Calendar invite generation        │                   │
 │  └──────────────────────────────────────┘                   │
 │                                                               │
 └─────────────────────────────────────────────────────────────┘
@@ -40,6 +44,8 @@
    ┌────▼────┐      ┌─────▼──────┐    ┌────▼────┐
    │ Hosting │      │ Database   │    │Functions│
    └─────────┘      └────────────┘    └─────────┘
+                                    (Email: Invites
+                                     & Results)
 ```
 
 ## Data Flow
@@ -71,6 +77,39 @@
 3. Results displayed in ResultsDisplay component
 4. Can be exported to CSV
 
+### Starting a Poll (Voting)
+
+1. Admin proposes 2-5 candidate date ranges from overlap results
+2. Admin clicks "Start Poll" to activate voting
+3. `poll` object created in Firebase with:
+   - Status: "active"
+   - Candidates array with date ranges
+   - Empty votes object
+4. Participants see voting banner and highlighted candidates on calendar
+5. Poll syncs in real-time as Firebase data updates
+
+### Casting Votes
+
+1. Participant clicks on highlighted candidate period
+2. VotePanel displays with vote count and voter list
+3. Participant clicks "Vote for this period"
+4. `submitVote()` writes to Firebase `poll.votes[participantId]`
+5. Vote count and percentage bar update in real-time
+6. All other participants see updated vote counts immediately
+7. (Optional) Auto-close poll when all participants have voted
+
+### Closing Poll & Sending Results
+
+1. Admin clicks "Close Poll" to set status to "closed"
+2. Winning candidate determined by vote count
+3. Admin clicks "Send Results"
+4. POST request to `/api/send-vote-result` with winner date
+5. Cloud Function:
+   - Generates ICS calendar file
+   - Sends HTML email to all participants
+   - Includes calendar invite attachment
+6. Participants can import event directly into calendar
+
 ### Sending Reminders
 
 1. Admin clicks "Send Reminder"
@@ -91,15 +130,27 @@ App
 │   │   ├── Export CSV
 │   │   ├── Send Reminder
 │   │   └── Delete Group
+│   ├── VotingSetup (propose candidates)
+│   │   ├── SlidingOverlapCalendar
+│   │   └── Candidate List
+│   ├── VotingResults (live vote tracking)
+│   │   ├── SlidingOverlapCalendar
+│   │   ├── VotePanel (click to see votes)
+│   │   └── Vote Counts
 │   ├── ParticipantTable
 │   └── ResultsDisplay
 └── ParticipantView
     ├── GroupHeader
-    ├── CalendarView
+    ├── SlidingOverlapCalendar (voting mode)
     │   ├── MonthCalendar
     │   ├── DaySelection
     │   ├── BlockTypeSelector
     │   └── SubmitButton
+    ├── VotePanel (vote for candidates)
+    │   ├── Vote Counter
+    │   ├── Voter List
+    │   └── Vote Button
+    ├── CalendarEventButton
     └── ParticipantList
 ```
 
@@ -115,6 +166,25 @@ vacation-scheduler/
         ├── endDate: "2024-08-31"
         ├── adminEmail: "admin@example.com"
         ├── createdAt: "2024-02-04T10:00:00Z"
+        ├── poll: {                          # Voting data (if poll active)
+        │   ├── status: "active" | "closed"
+        │   ├── mode: "single" | "multiple"
+        │   ├── startedAt: "2024-02-04T11:00:00Z"
+        │   ├── closedAt: "2024-02-04T12:00:00Z"
+        │   ├── candidates: [
+        │   │   {
+        │   │     id: "cand_1",
+        │   │     startDate: "2024-06-15",
+        │   │     endDate: "2024-06-22"
+        │   │   }
+        │   │ ]
+        │   └── votes: {                     # Real-time vote tracking
+        │       {participantId}: {
+        │         candidateIds: ["cand_1"],
+        │         votedAt: "2024-02-04T11:30:00Z"
+        │       }
+        │     }
+        │ }
         └── participants/
             └── {participantId}/
                 ├── id: "1707000000001"
@@ -135,25 +205,25 @@ vacation-scheduler/
 ```
 calculateOverlap(participants, startDate, endDate, durationDays):
   results = []
-  
+
   for each day in [startDate ... endDate - durationDays]:
     periodStart = day
     periodEnd = day + durationDays - 1
-    
+
     availableCount = 0
     for each participant:
       if participant.availableDays contains ALL days in period:
         availableCount++
-    
+
     percentAvailable = (availableCount / totalParticipants) * 100
-    
+
     results.append({
       startDate: periodStart,
       endDate: periodEnd,
       availableCount: availableCount,
       availabilityPercent: percentAvailable
     })
-  
+
   sort results by availabilityPercent (descending)
   return results
 ```
@@ -164,6 +234,37 @@ calculateOverlap(participants, startDate, endDate, durationDays):
 - p = number of participants
 
 **Space Complexity**: O(n) for results array
+
+## Algorithm: Vote Tallying & Results
+
+```
+tallyVotes(poll):
+  voteCounts = {}
+
+  for each candidateId in poll.candidates:
+    voteCounts[candidateId] = 0
+
+  for each (participantId, voteData) in poll.votes:
+    for each candidateId in voteData.candidateIds:
+      voteCounts[candidateId]++
+
+  // Find winner
+  winner = max(voteCounts) by count
+  winnerPercent = (voteCounts[winner] / totalParticipants) * 100
+
+  return {
+    winner: winner,
+    voteCount: voteCounts[winner],
+    percentage: winnerPercent,
+    allCounts: voteCounts
+  }
+```
+
+**Time Complexity**: O(v * c) where:
+- v = number of votes cast
+- c = number of candidates per vote
+
+**Space Complexity**: O(c) for candidate counts
 
 ## State Management
 
@@ -180,20 +281,34 @@ calculateOverlap(participants, startDate, endDate, durationDays):
 - `editing`: Edit mode toggle
 - `durationFilter`: Selected duration for filtering
 - `overlaps`: Calculated overlap results
+- `poll`: Current poll object (if active) with candidates and votes
+- `votingMode`: Boolean flag for voting UI state
+- `candidates`: Array of proposed date ranges for voting
 
 ### Participant View State
 - `group`: Group object
 - `loading`: Fetch status
 - `submitted`: Form submission confirmation
 - `participants`: Other participants list
+- `currentParticipantId`: User's participant ID (for voting)
+- `poll`: Current poll object (if active)
+- `votingMode`: Boolean flag for voting UI state
 
-### Calendar View State
+### Calendar View State (Shared between Admin & Participant)
 - `name`: Participant name
 - `email`: Participant email
 - `duration`: Trip duration selection
 - `blockType`: Selection mode
 - `selectedDays`: Array of selected dates
 - `currentMonth/Year`: Calendar navigation
+- `activeBlock`: Currently selected date range during voting
+- `highlightedCandidates`: Array of candidate date ranges to highlight
+
+### Vote Panel State
+- `currentParticipantId`: User's participant ID
+- `poll`: Current poll with candidates and votes
+- `candidateId`: Selected candidate to vote on
+- `myVote`: Current user's vote data (candidateIds array)
 
 ## Key Algorithms
 
@@ -249,24 +364,36 @@ calculateOverlap(participants, startDate, endDate, durationDays):
 ## Extensibility Points
 
 ### Email Integration
+- Voting invitations sent when poll starts
+- Voting result emails with calendar attachments (ICS format)
 - Easily swap Nodemailer for SendGrid, AWS SES, etc.
-- Add email templates
+- Add custom email templates
 - Implement scheduled reminders
+
+### Voting System Enhancements
+- Weighted voting (give higher weight to certain participants)
+- Multiple choice voting (rank candidates by preference)
+- Anonymous voting toggle
+- Voting deadlines with auto-close
+- Voting notifications/reminders
 
 ### Authentication
 - Add Firebase Auth for admin login
 - Implement group ownership verification
-- Role-based access control
+- Role-based access control (admin vs. participant)
+- Admin-only poll management permissions
 
 ### Analytics
 - Track group creation/participation
 - Monitor overlap accuracy
-- Measure usage patterns
+- Measure voting engagement (participation rate)
+- Track poll duration and vote distribution
 
 ### Mobile App
 - Share same Firebase backend
 - Native iOS/Android clients
 - Offline sync support
+- Push notifications for voting invites
 
 ## Deployment Architecture
 

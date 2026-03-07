@@ -8,8 +8,11 @@ A full-featured app for coordinating group vacations:
 - ✅ Admin creates groups with flexible date ranges
 - ✅ Participants select their available dates (individual days or fixed blocks)
 - ✅ Automatic calculation of best vacation periods by availability %
+- ✅ **Democratic voting** — Admin proposes candidate dates, participants vote with live results
+- ✅ Live vote tracking — See who voted for what in real-time
+- ✅ Calendar invites — Winning date sent as ICS file + email
 - ✅ Export results as CSV
-- ✅ Email reminders for admins
+- ✅ Email reminders & voting notifications
 - ✅ Mobile-responsive design
 - ✅ Real-time Firebase backend
 
@@ -231,12 +234,22 @@ vacation-scheduler/
 3. Calculates availability percentage
 4. Ranks by highest match (e.g., "100% available July 22-26!")
 
-### Results
+### Finding Overlap & Results
 
 - Admin sees live results in dashboard
 - Can filter by trip duration
 - Export everything to CSV
 - Send reminder emails
+
+### Voting to Finalize Dates
+
+1. Admin proposes 2–5 candidate date ranges (based on overlap data)
+2. Admin clicks "Start Vote" to launch the poll
+3. Participants see proposed dates highlighted on the heatmap
+4. Each participant clicks a date to vote for their preference
+5. Live vote results update in real-time, showing vote counts and who voted for what
+6. Admin can close the poll at any time
+7. When poll closes, admin sends the winning date as a calendar invite via email
 
 ---
 

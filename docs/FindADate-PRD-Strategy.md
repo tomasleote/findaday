@@ -324,57 +324,126 @@ Each template pre-configures:
 
 **Effort:** ~4-6 hours. Low risk. Purely UI change — data model unchanged.
 
-### 4.4 New Feature: Voting Layer
+### 4.4 Voting Layer ✓ IMPLEMENTED
 
 After availability collection, admin triggers a vote on the top N overlapping periods:
 
 **Flow:**
-1. Admin views overlap results (existing)
-2. Admin clicks "Start Vote" → selects 2-5 top periods
-3. System generates a voting link (reuses participant link pattern)
-4. Participants vote on their preferred option
-5. Admin sees vote results and confirms final date
+1. Admin views overlap results (heatmap in AdminPage)
+2. Admin clicks on periods in VotingSetup → adds 2-5 periods as candidates
+3. Admin clicks "Start Poll" to activate voting
+4. Participants see voting banner + highlighted candidates on calendar
+5. Participants click each candidate period to vote
+6. Admin sees live vote counts and voter list in VotingResults
+7. Admin closes poll and clicks "Send Results" to email winner with calendar invite
 
-**Data model addition:**
+**Data model (implemented):**
 ```json
 {
-  "groups/{groupId}/votes": {
+  "groups/{groupId}/poll": {
     "status": "active|closed",
-    "options": [
-      { "startDate": "2026-07-10", "endDate": "2026-07-17", "votes": 5 },
-      { "startDate": "2026-07-20", "endDate": "2026-07-27", "votes": 3 }
+    "mode": "single|multiple",
+    "startedAt": "2026-03-07T14:30:00Z",
+    "candidates": [
+      { "id": "cand_1", "startDate": "2026-07-10", "endDate": "2026-07-17" },
+      { "id": "cand_2", "startDate": "2026-07-20", "endDate": "2026-07-27" }
     ],
-    "voters": { "participantId": "optionIndex" }
+    "votes": {
+      "participantId_1": { "candidateIds": ["cand_1"], "votedAt": "2026-03-07T14:35:00Z" },
+      "participantId_2": { "candidateIds": ["cand_2"], "votedAt": "2026-03-07T14:36:00Z" }
+    }
   }
 }
 ```
 
-**Effort:** ~15-20 hours. Medium risk. Needs new Firebase rules, new UI component, new participant flow state.
-
-**MVP sequencing:** Ship as a separate phase after rebrand. Do not block launch.
-
-### 4.5 New Feature: One-Click Calendar Event Creation
-
-After a date is confirmed (manually or via vote):
-
-1. Admin clicks "Create Calendar Event"
-2. System generates a Google Calendar link with pre-filled:
-   - Title: group name
-   - Dates: confirmed start/end
-   - Description: group description + FindADate attribution
-3. Also generates an `.ics` file download for non-Google users
-4. Optional: "Send invite link" copies a shareable calendar URL
-
 **Implementation:**
-```javascript
-// Google Calendar URL generation — no API key needed
-const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${start}/${end}&details=${encodeURIComponent(details)}`;
+- **Frontend Components:**
+  - `AdminPage.jsx` — Manages voting setup and results
+  - `VotingSetup.jsx` — Candidate period selection
+  - `VotingResults.jsx` — Live vote tracking with real-time Firebase subscription
+  - `VotePanel.jsx` — Vote casting interface (shown on SlidingOverlapCalendar)
+  - `SlidingOverlapCalendar.jsx` — Displays candidates and vote results in heatmap
 
-// ICS file generation — pure client-side
-const icsContent = `BEGIN:VCALENDAR\nBEGIN:VEVENT\nDTSTART:${icsDate(start)}\nDTEND:${icsDate(end)}\nSUMMARY:${title}\nDESCRIPTION:${details}\nEND:VEVENT\nEND:VCALENDAR`;
+- **Backend Services:**
+  - `pollService.js` — Firebase operations (subscribeToPoll, submitVote, closePoll)
+  - `api/send-vote-invite.js` — Serverless function for voting invitations
+  - `api/send-vote-result.js` — Serverless function for winner email + ICS calendar
+
+- **Features:**
+  - Real-time vote count updates across all participants
+  - Voter transparency — see who voted for what
+  - Single vs. multiple choice voting modes
+  - Auto-close poll when all participants vote
+  - Calendar invite generation (ICS RFC 5545 format)
+  - Email notifications at poll start and winner announcement
+
+**Status:** ✅ Complete and deployed. Production-ready with email integration.
+
+### 4.5 Calendar Event Creation ✓ IMPLEMENTED (as part of voting)
+
+After a date is confirmed (via vote or manual admin selection):
+
+1. Admin clicks "Send Results" in VotingResults panel
+2. System generates:
+   - RFC 5545 ICS calendar file (all-day event)
+   - HTML email with branded styling
+   - Group coordination link
+3. Email includes:
+   - ICS attachment that imports directly into any calendar
+   - Winner date prominently displayed
+   - Link back to group planning page
+4. Participants can import the event in one click
+
+**Implementation (in `api/send-vote-result.js`):**
+```javascript
+// ICS generation — RFC 5545 compliant
+function generateICS({ title, startDate, endDate, description }) {
+  const end = new Date(endDate);
+  end.setDate(end.getDate() + 1); // exclusive end for all-day events
+  const endStr = end.toISOString().split('T')[0].replace(/-/g, '');
+  const startStr = startDate.replace(/-/g, '');
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Find A Day//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${Date.now()}@findaday`,
+    `DTSTAMP:${now}`,
+    `DTSTART;VALUE=DATE:${startStr}`,
+    `DTEND;VALUE=DATE:${endStr}`,
+    `SUMMARY:${title}`,
+    `DESCRIPTION:${description}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\\r\\n');
+}
+
+// Sent via Nodemailer with Outlook/Apple/Google calendar compatibility
+await transporter.sendMail({
+  from: `"Find A Day" <${process.env.EMAIL_USER}>`,
+  to: recipients,
+  subject: `Date confirmed — "${groupName}"`,
+  html: styledEmailHTML,
+  attachments: [{
+    filename: 'event.ics',
+    content: icsContent,
+    contentType: 'text/calendar; method=REQUEST'
+  }]
+});
 ```
 
-**Effort:** ~6-8 hours. Low risk. Entirely client-side, no backend changes.
+**Features:**
+- RFC 5545 compliant ICS format
+- All-day event support with correct date ranges
+- Outlook, Apple Calendar, Google Calendar compatible
+- One-click import for recipients
+- Email branding with FindADate styling
+- No API keys required — pure serverless
+
+**Status:** ✅ Complete and deployed. Production-ready via Vercel serverless functions.
 
 ### 4.6 New Feature: Enriched Link Previews
 
@@ -423,16 +492,25 @@ exports.dynamicMeta = functions.https.onRequest(async (req, res) => {
 
 ### 4.7 MVP Sequencing
 
-| Phase | Feature | Effort | Priority |
-|-------|---------|--------|----------|
-| **Phase 1 (Week 1-2)** | Rebrand copy + domain + visual identity | 15-20h | Critical |
-| **Phase 2 (Week 2-3)** | SEO landing pages + static meta tags | 12-16h | Critical |
-| **Phase 3 (Week 3-4)** | Dynamic OG tags for shared links | 10-14h | High |
-| **Phase 4 (Week 4-5)** | Event type templates | 4-6h | Medium |
-| **Phase 5 (Week 5-7)** | Calendar event creation (Google + ICS) | 6-8h | Medium |
-| **Phase 6 (Week 7-10)** | Voting layer | 15-20h | Medium |
+| Phase | Feature | Effort | Priority | Status |
+|-------|---------|--------|----------|--------|
+| **Phase 1 (Week 1-2)** | Rebrand copy + domain + visual identity | 15-20h | Critical | ⏳ Planned |
+| **Phase 2 (Week 2-3)** | SEO landing pages + static meta tags | 12-16h | Critical | ⏳ Planned |
+| **Phase 3 (Week 3-4)** | Dynamic OG tags for shared links | 10-14h | High | ⏳ Planned |
+| **Phase 4 (Week 4-5)** | Event type templates | 4-6h | Medium | ⏳ Planned |
+| **Phase 5 (Week 5-7)** | Calendar event creation (ICS + Email) | 6-8h | High | ✅ DONE |
+| **Phase 6 (Week 7-10)** | Voting layer + Real-time poll | 15-20h | High | ✅ DONE |
 
-**Total estimated effort:** ~62-84 hours across 10 weeks.
+**Total completed effort:** ~21-28 hours
+**Total remaining effort:** ~41-56 hours across 5-6 weeks
+
+**Recent completions (March 2026):**
+- ✅ Voting system with real-time Firebase sync
+- ✅ Vote-based period selection with live updates
+- ✅ Calendar invite generation (RFC 5545 ICS format)
+- ✅ Email notifications for voting invites and results
+- ✅ Voting UI components (setup, results, vote panel)
+- ✅ Documentation updates across all files
 
 ---
 

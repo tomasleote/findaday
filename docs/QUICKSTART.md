@@ -76,18 +76,40 @@ Visit `http://localhost:3000`
 2. Click "Join Group"
 3. Paste the Group ID
 4. Click "Join"
-5. Enter your name
+5. Enter your name and email (email needed for voting notifications)
 6. Select some dates
 7. Click "Submit Availability"
 
-### View Results
+### View Results & Test Voting
 
+**Single Participant (Admin Panel):**
 1. Go back to the first tab (Admin Panel)
 2. Refresh the page
 3. You should see:
    - Your participant listed
-   - A calendar showing your selected dates
+   - A calendar showing selected dates
    - Overlap periods ranked by availability %
+
+**Test the Voting Feature:**
+1. **Set up voting candidates** (Admin only):
+   - Click on a period in the heatmap (the availability results)
+   - Click "Add as Candidate" to propose date ranges
+   - Add 2-4 candidate periods
+   - Click "Start Poll" to open voting
+
+2. **Vote on candidates** (Participant):
+   - Join the group in another browser/tab (as a new participant)
+   - Submit different availability dates
+   - When admin starts the poll, you'll see highlighted candidate periods
+   - Click on each period to see the vote option
+   - Click "Vote for this period" to cast your vote
+   - See live vote counts update in real-time
+
+3. **View voting results** (Admin):
+   - Watch vote counts update in real-time in the Results panel
+   - Click "Close Poll" when voting is complete
+   - The winning date (most votes) is shown
+   - Click "Send Results" to email calendar invites to all participants
 
 ## 6. Deploy to Firebase (Optional)
 
