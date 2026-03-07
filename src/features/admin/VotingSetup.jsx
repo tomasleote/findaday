@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Vote, X, Play } from 'lucide-react';
 import SlidingOverlapCalendar from '../../components/SlidingOverlapCalendar';
 import { Button } from '../../shared/ui';
@@ -12,12 +12,15 @@ function VotingSetup({ group, participants, overlaps, durationFilter, onDuration
   const [candidates, setCandidates] = useState([]);
   const [mode, setMode] = useState('single');
   const [starting, setStarting] = useState(false);
+  const calendarRef = useRef(null);
 
   const addCandidate = ({ startDate, endDate }) => {
     if (candidates.length >= 5) return;
     const already = candidates.some(c => c.startDate === startDate && c.endDate === endDate);
     if (already) return;
     setCandidates(prev => [...prev, { startDate, endDate, label: prev.length + 1 }]);
+    // Auto-deselect period after adding candidate
+    calendarRef.current?.clearSelection();
   };
 
   const removeCandidate = (idx) => {
@@ -80,6 +83,7 @@ function VotingSetup({ group, participants, overlaps, durationFilter, onDuration
 
       {/* Heatmap with Add as Candidate renderSelectedAction */}
       <SlidingOverlapCalendar
+        ref={calendarRef}
         startDate={group.startDate}
         endDate={group.endDate}
         participants={participants}
