@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 
 const _dbUrl = (() => {
   if (process.env.REACT_APP_FIREBASE_DATABASE_URL) {
@@ -25,3 +26,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const database = getDatabase(app);
+
+if (process.env.NODE_ENV !== 'test') {
+  const auth = getAuth(app);
+  signInAnonymously(auth).catch(console.error);
+}

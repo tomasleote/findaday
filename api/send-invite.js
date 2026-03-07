@@ -4,6 +4,8 @@
 // Optional env var: CANONICAL_BASE_URL (overrides client-provided baseUrl)
 
 const nodemailer = require('nodemailer');
+const { checkRateLimit } = require('./_lib/rateLimit');
+const { validateAdminToken } = require('./_lib/adminAuth');
 
 /**
  * Escapes HTML special characters to prevent injection.
@@ -59,9 +61,20 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'groupId and participantId are required' });
   }
 
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-    console.error('[send-invite] EMAIL_USER or EMAIL_PASSWORD is not set');
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[send-invite] RESEND_API_KEY is not set');
     return res.status(500).json({ error: 'Email service is not configured' });
+  }
+
+  const { adminToken } = req.body ?? {};
+  const isAdmin = await validateAdminToken(groupId, adminToken);
+  if (!isAdmin) {
+    return res.status(403).json({ error: 'Invalid admin token' });
+  }
+
+  const { allowed } = await checkRateLimit(`invite:${groupId}`, 3, 60 * 60 * 1000);
+  if (!allowed) {
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
   }
 
   const origin = getSafeOrigin(baseUrl);
@@ -105,15 +118,17 @@ module.exports = async function handler(req, res) {
 
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.resend.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user: 'resend',
+        pass: process.env.RESEND_API_KEY,
       },
     });
 
     await transporter.sendMail({
-      from: `"Vacation Scheduler" <${process.env.EMAIL_USER}>`,
+      from: `"Find A Day" <${process.env.EMAIL_FROM || 'noreply@findaday.app'}>`,
       to: participantEmail,
       subject: `You're invited to "${safeGroupNameSubject}" — mark your available dates`,
       html,

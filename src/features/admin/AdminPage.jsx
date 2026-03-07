@@ -53,7 +53,7 @@ function AdminPage({ onBack }) {
     poll, setPoll,
   } = useGroupData(groupId, adminToken, onBack);
 
-  const participantActions = useParticipantActions(groupId, group, participants, setParticipants);
+  const participantActions = useParticipantActions(groupId, adminToken, group, participants, setParticipants);
 
   // Auto-scroll to heatmap when poll starts
   const prevPollIdRef = useRef(poll?.id);
@@ -76,7 +76,7 @@ function AdminPage({ onBack }) {
       }
       delete updates.newPassphrase;
 
-      await updateGroup(groupId, updates);
+      await updateGroup(groupId, adminToken, updates);
       setGroup({ ...group, ...updates });
       setEditing(false);
       addNotification({ type: 'success', title: 'Group Updated', message: 'Group settings have been saved.' });
@@ -88,7 +88,7 @@ function AdminPage({ onBack }) {
 
   const handleDelete = useCallback(async () => {
     try {
-      await deleteGroup(groupId);
+      await deleteGroup(groupId, adminToken);
       onBack();
     } catch (err) {
       console.error('[Admin Panel Error] handleDelete failed:', err);
@@ -116,6 +116,7 @@ function AdminPage({ onBack }) {
         method: 'POST',
         body: JSON.stringify({
           groupId,
+          adminToken,
           groupName: group.name,
           startDate: group.startDate,
           participants: participants?.filter(p => p?.email && p.email.trim() !== '').map(p => ({ email: p.email })) || [],

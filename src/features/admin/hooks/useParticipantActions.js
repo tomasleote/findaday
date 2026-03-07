@@ -4,7 +4,7 @@ import { validateParticipantName, validateEmail, sanitizeName, sanitizeEmail, ge
 import { apiCall } from '../../../services/apiService';
 import { useNotification } from '../../../context/NotificationContext';
 
-export function useParticipantActions(groupId, group, participants, setParticipants) {
+export function useParticipantActions(groupId, adminToken, group, participants, setParticipants) {
   const { addNotification } = useNotification();
 
   // Create state
@@ -156,7 +156,7 @@ export function useParticipantActions(groupId, group, participants, setParticipa
     setParticipants(prev => prev.filter(p => p.id !== deleteId));
 
     try {
-      await deleteParticipant(groupId, deleteId);
+      await deleteParticipant(groupId, adminToken, deleteId);
       addNotification({ type: 'success', title: 'Participant Deleted', message: `${deletedName} has been removed from the group.` });
       setShowDeleteConfirm(false);
       setDeletingParticipant(null);

@@ -2,10 +2,60 @@
   "rules": {
     ".read": false,
     ".write": false,
+    "_rateLimits": {
+      ".read": false,
+      ".write": false
+    },
     "groups": {
+      ".indexOn": [],
       "$groupId": {
-        ".read": "true",
-        ".write": "!data.exists() || newData.exists()",
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || newData.exists())",
+        "participantNames": {
+          ".read": "auth != null",
+          "$normalizedName": {
+            ".write": "auth != null",
+            ".validate": "newData.isString()"
+          }
+        },
+        "meta": {
+          ".read": "true",
+          ".write": "auth != null && (!data.exists() || newData.exists())",
+          ".indexOn": [
+            "adminEmail",
+            "createdAt"
+          ],
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 100"
+          },
+          "description": {
+            ".validate": "newData.isString() && newData.val().length <= 1000"
+          },
+          "eventType": {
+            ".validate": "newData.isString()"
+          },
+          "startDate": {
+            ".validate": "newData.isString()"
+          },
+          "endDate": {
+            ".validate": "newData.isString()"
+          },
+          "adminEmail": {
+            ".validate": "newData.isString()"
+          },
+          "location": {
+            ".validate": "newData.hasChildren()"
+          },
+          "createdAt": {
+            ".write": "!data.exists()"
+          },
+          "id": {
+            ".write": "!data.exists()"
+          },
+          "adminTokenHash": {
+            ".write": "!data.exists()"
+          }
+        },
         "id": {
           ".write": "!data.exists()"
         },
@@ -15,31 +65,11 @@
         "adminTokenHash": {
           ".write": "!data.exists()"
         },
-        "name": {
-          ".validate": "newData.isString() && newData.val().length <= 100"
-        },
-        "description": {
-          ".validate": "newData.isString() && newData.val().length <= 1000"
-        },
-        "eventType": {
-          ".validate": "newData.isString()"
-        },
-        "startDate": {
-          ".validate": "newData.isString()"
-        },
-        "endDate": {
-          ".validate": "newData.isString()"
-        },
-        "adminEmail": {
-          ".validate": "newData.isString()"
-        },
-        "location": {
-          ".validate": "newData.hasChildren()"
-        },
         "participants": {
-          ".read": "true",
+          ".read": "auth != null",
+          ".validate": "newData.numChildren() <= 100",
           "$participantId": {
-            ".write": "!data.exists() || (data.exists() && newData.exists()) || !newData.exists()",
+            ".write": "auth != null && (!data.exists() || (data.exists() && newData.exists()) || !newData.exists())",
             "name": {
               ".validate": "newData.isString() && newData.val().length <= 100"
             },
@@ -53,10 +83,13 @@
               ".validate": "newData.isString()"
             },
             "availableDays": {
-              ".validate": "newData.exists()"
+              ".validate": "newData.numChildren() <= 400",
+              "$dayIndex": {
+                ".validate": "newData.isString() && newData.val().length <= 10"
+              }
             },
             "id": {
-              ".validate": "newData.isString()"
+              ".validate": "newData.isString() && newData.val() === $participantId"
             },
             "createdAt": {
               ".write": "!data.exists()"
@@ -64,8 +97,8 @@
           }
         },
         "poll": {
-          ".read": "true",
-          ".write": "!data.exists() || newData.exists() || !newData.exists()",
+          ".read": "auth != null",
+          ".write": "auth != null && (!data.exists() || newData.exists() || !newData.exists())",
           "status": {
             ".validate": "newData.isString() && (newData.val() === 'active' || newData.val() === 'closed')"
           },
@@ -73,7 +106,8 @@
             ".validate": "newData.isString() && (newData.val() === 'single' || newData.val() === 'multi')"
           },
           "candidates": {
-            ".write": "true",
+            ".write": "auth != null",
+            ".validate": "newData.numChildren() <= 15",
             "$candidateId": {
               "startDate": {
                 ".validate": "newData.isString()"
@@ -87,16 +121,33 @@
             }
           },
           "votes": {
-            ".write": "true",
+            ".write": "auth != null",
             "$participantId": {
-              ".write": "true",
+              ".write": "auth != null",
               "candidateIds": {
-                ".validate": "newData.hasChildren() || newData.isString()"
+                ".validate": "(newData.hasChildren() && newData.numChildren() <= 15) || newData.isString()"
               },
               "votedAt": {
                 ".validate": "newData.isString()"
               }
             }
+          }
+        },
+        "availability": {
+          ".read": "auth != null",
+          "$participantId": {
+            ".write": "auth != null",
+            ".validate": "newData.numChildren() <= 400",
+            "$dateStr": {
+              ".validate": "newData.isBoolean()"
+            }
+          }
+        },
+        "dailyCounts": {
+          ".read": "auth != null",
+          ".write": "auth != null",
+          "$dateStr": {
+            ".validate": "newData.isNumber() && newData.val() >= 0"
           }
         }
       }

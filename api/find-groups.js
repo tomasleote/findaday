@@ -18,36 +18,13 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-const emailRateLimits = new Map();
-const ipRateLimits = new Map();
-const RATELIMIT_WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 3;
-
-function isRateLimited(ip, email) {
-  const now = Date.now();
-  for (const [key, data] of emailRateLimits.entries()) {
-    if (now - data.timestamp > RATELIMIT_WINDOW_MS) emailRateLimits.delete(key);
-  }
-  for (const [key, data] of ipRateLimits.entries()) {
-    if (now - data.timestamp > RATELIMIT_WINDOW_MS) ipRateLimits.delete(key);
-  }
-  let ipData = ipRateLimits.get(ip) || { count: 0, timestamp: now };
-  let emailData = emailRateLimits.get(email) || { count: 0, timestamp: now };
-  if (ipData.count >= MAX_REQUESTS_PER_WINDOW || emailData.count >= MAX_REQUESTS_PER_WINDOW) {
-    return true;
-  }
-  ipData.count++;
-  emailData.count++;
-  ipRateLimits.set(ip, ipData);
-  emailRateLimits.set(email, emailData);
-  return false;
-}
+const { checkRateLimit } = require('./_lib/rateLimit');
 
 async function getAllGroups(options = {}) {
   let url = `${DB_URL.replace(/\/$/, '')}/groups.json`;
   const params = new URLSearchParams();
   if (options.adminEmail) {
-    params.append('orderBy', '"adminEmail"');
+    params.append('orderBy', '"meta/adminEmail"');
     params.append('equalTo', `"${options.adminEmail}"`);
   } else if (options.shallow === false) {
     params.append('shallow', 'false');
@@ -75,7 +52,7 @@ module.exports = async function handler(req, res) {
   if (!DB_URL) {
     return res.status(500).json({ error: 'Database not configured' });
   }
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+  if (!process.env.RESEND_API_KEY) {
     return res.status(500).json({ error: 'Email service is not configured' });
   }
 
@@ -87,10 +64,12 @@ module.exports = async function handler(req, res) {
   const targetEmail = email.trim().toLowerCase();
   const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
 
-  if (isRateLimited(ip, targetEmail)) {
+  const { allowed } = await checkRateLimit(`find:${targetEmail}`, 3, 60 * 1000);
+  if (!allowed) {
+    const crypto = require('crypto');
     const hashedEmail = crypto.createHash('sha256').update(targetEmail).digest('hex').substring(0, 8);
     console.warn(`[find-groups] Rate limit exceeded for email hash ${hashedEmail}`);
-    return res.status(200).json({ found: 0 });
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
   }
 
   // Scan all groups for adminEmail match
@@ -105,7 +84,7 @@ module.exports = async function handler(req, res) {
   const origin = process.env.APP_BASE_URL || (req.headers['x-forwarded-host'] ? 'https://' + req.headers['x-forwarded-host'] : req.headers.referer?.replace(/\/$/, '') || 'https://vacation-scheduler.vercel.app');
 
   const matches = Object.values(allGroups || {}).filter(
-    (g) => g && g.adminEmail && g.adminEmail.trim().toLowerCase() === targetEmail
+    (g) => g && g.meta && g.meta.adminEmail && g.meta.adminEmail.trim().toLowerCase() === targetEmail
   );
 
   // Always respond with success to prevent email enumeration attacks
@@ -113,11 +92,13 @@ module.exports = async function handler(req, res) {
     // Send a "no groups found" email anyway so the UX feels consistent
     try {
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD },
+        host: 'smtp.resend.com',
+        port: 465,
+        secure: true,
+        auth: { user: 'resend', pass: process.env.RESEND_API_KEY },
       });
       await transporter.sendMail({
-        from: `"Vacation Scheduler" <${process.env.EMAIL_USER}>`,
+        from: `"Find A Day" <${process.env.EMAIL_FROM || 'noreply@findaday.app'}>`,
         to: targetEmail,
         subject: 'No groups found for your email — Vacation Scheduler',
         html: `
@@ -147,10 +128,10 @@ module.exports = async function handler(req, res) {
       const participantLink = `${origin}?group=${g.id}`;
       return `
         <div style="background:#1e293b;border-radius:8px;padding:16px;margin-bottom:12px;">
-          <h3 style="margin:0 0 6px;font-size:16px;color:#f1f5f9;">${escapeHtml(g.name || 'Unnamed group')}</h3>
-          <p style="margin:0 0 10px;font-size:13px;color:#94a3b8;">${formatDate(g.startDate)} → ${formatDate(g.endDate)}</p>
+          <h3 style="margin:0 0 6px;font-size:16px;color:#f1f5f9;">${escapeHtml(g.meta?.name || 'Unnamed group')}</h3>
+          <p style="margin:0 0 10px;font-size:13px;color:#94a3b8;">${formatDate(g.meta?.startDate)} → ${formatDate(g.meta?.endDate)}</p>
           <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Group ID</p>
-          <code style="display:block;padding:8px 10px;background:#0f172a;border-radius:6px;color:#818cf8;font-size:12px;margin-bottom:10px;">${escapeHtml(g.id)}</code>
+          <code style="display:block;padding:8px 10px;background:#0f172a;border-radius:6px;color:#818cf8;font-size:12px;margin-bottom:10px;">${escapeHtml(g.id || g.meta?.id)}</code>
           <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Participant link</p>
           <a href="${escapeHtml(participantLink)}" style="display:block;padding:8px 10px;background:#0f172a;border-radius:6px;color:#60a5fa;text-decoration:none;font-size:12px;word-break:break-all;">${escapeHtml(participantLink)}</a>
         </div>`;
@@ -182,11 +163,13 @@ module.exports = async function handler(req, res) {
 
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD },
+      host: 'smtp.resend.com',
+      port: 465,
+      secure: true,
+      auth: { user: 'resend', pass: process.env.RESEND_API_KEY },
     });
     await transporter.sendMail({
-      from: `"Vacation Scheduler" <${process.env.EMAIL_USER}>`,
+      from: `"Find A Day" <${process.env.EMAIL_FROM || 'noreply@findaday.app'}>`,
       to: targetEmail,
       subject: `Your ${matches.length} Vacation Scheduler group${matches.length !== 1 ? 's' : ''}`,
       html,

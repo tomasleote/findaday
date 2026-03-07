@@ -8,19 +8,21 @@
     ],
     "rewrites": [
       {
-        "source": "/api/send-reminder",
-        "function": "sendReminder"
-      },
-      {
         "source": "**",
         "destination": "/app.html"
       }
     ]
   },
-  "functions": {
-    "source": "functions"
-  },
   "database": {
     "rules": "database.rules.json"
+  },
+  "emulators": {
+    "database": {
+      "port": 9000,
+      "host": "127.0.0.1"
+    },
+    "ui": {
+      "enabled": true
+    }
   }
 }

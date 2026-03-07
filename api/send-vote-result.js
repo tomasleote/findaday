@@ -3,24 +3,10 @@
 // Required env vars: EMAIL_USER, EMAIL_PASSWORD, REACT_APP_FIREBASE_DATABASE_URL
 
 const nodemailer = require('nodemailer');
-const crypto = require('crypto');
+const { checkRateLimit } = require('./_lib/rateLimit');
+const { validateAdminToken } = require('./_lib/adminAuth');
 
 const DB_URL = process.env.REACT_APP_FIREBASE_DATABASE_URL;
-
-function hashPhrase(text) {
-  if (!text) return '';
-  return crypto.createHash('sha256').update(text).digest('hex');
-}
-
-function timingSafeEqual(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string') return false;
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
-}
 
 async function getGroup(groupId) {
   if (!DB_URL || !groupId) return null;
@@ -90,7 +76,7 @@ module.exports = async function handler(req, res) {
 
   const { groupId, adminToken, winnerStartDate, winnerEndDate, baseUrl } = req.body ?? {};
 
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+  if (!process.env.RESEND_API_KEY) {
     return res.status(500).json({ error: 'Email service is not configured' });
   }
 
@@ -109,8 +95,14 @@ module.exports = async function handler(req, res) {
   }
 
   // 2. Verify admin ownership
-  if (!group.adminTokenHash || !timingSafeEqual(hashPhrase(adminToken), group.adminTokenHash)) {
+  const isAdmin = await validateAdminToken(groupId, adminToken);
+  if (!isAdmin) {
     return res.status(401).json({ error: 'Unauthorized: Invalid admin token' });
+  }
+
+  const { allowed } = await checkRateLimit(`voteresult:${groupId}`, 3, 60 * 60 * 1000);
+  if (!allowed) {
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
   }
 
   // 3. Sanitize and validate logic
@@ -179,16 +171,18 @@ module.exports = async function handler(req, res) {
 
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.resend.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user: 'resend',
+        pass: process.env.RESEND_API_KEY,
       },
     });
 
     await transporter.sendMail({
-      from: `"Find A Day" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER || 'noreply@findaday.app', // Neutral To
+      from: `"Find A Day" <${process.env.EMAIL_FROM || 'noreply@findaday.app'}>`,
+      to: process.env.EMAIL_FROM || 'noreply@findaday.app', // Neutral To
       bcc: recipients,
       subject: `Date confirmed — "${groupName}"`,
       html,

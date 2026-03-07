@@ -1,6 +1,7 @@
 import { ref, set, get, update, remove, onValue, off } from 'firebase/database';
 import { database } from './firebaseConfig';
 import { hashPhrase } from './adminService';
+import { MAX_DATE_RANGE_DAYS } from '../utils/constants/validation';
 
 export const createGroup = async (groupData) => {
   try {
@@ -18,6 +19,16 @@ export const createGroup = async (groupData) => {
 
     if (!name || !startDate || !endDate) {
       throw new Error('Name, start date, and end date are required.');
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const rangeDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    if (rangeDays < 1) {
+      throw new Error('End date must be after start date.');
+    }
+    if (rangeDays > MAX_DATE_RANGE_DAYS) {
+      throw new Error(`Date range cannot exceed ${MAX_DATE_RANGE_DAYS} days.`);
     }
 
     const groupId = crypto.randomUUID();
@@ -45,7 +56,7 @@ export const createGroup = async (groupData) => {
     };
 
     const location = sanitizeLocation(groupData.location);
-    const groupRef = ref(database, `groups/${groupId}`);
+    const groupRef = ref(database, `groups/${groupId}/meta`);
     const groupPayload = {
       name,
       description,
@@ -61,6 +72,13 @@ export const createGroup = async (groupData) => {
     if (recoveryPasswordHash) {
       groupPayload.recoveryPasswordHash = recoveryPasswordHash;
     }
+    // Also write top-level static attributes to `groups/${groupId}` for easier listing/deletion and rules
+    const rootUpdates = {
+      [`groups/${groupId}/id`]: groupId,
+      [`groups/${groupId}/createdAt`]: groupPayload.createdAt,
+      [`groups/${groupId}/adminTokenHash`]: adminTokenHash,
+    };
+    await update(ref(database), rootUpdates);
     await set(groupRef, groupPayload);
     return { groupId, adminToken };
   } catch (error) {
@@ -71,7 +89,7 @@ export const createGroup = async (groupData) => {
 
 export const getGroup = async (groupId) => {
   try {
-    const groupRef = ref(database, `groups/${groupId}`);
+    const groupRef = ref(database, `groups/${groupId}/meta`);
     const snapshot = await get(groupRef);
     return snapshot.exists() ? snapshot.val() : null;
   } catch (error) {
@@ -80,21 +98,44 @@ export const getGroup = async (groupId) => {
   }
 };
 
-export const updateGroup = async (groupId, updates) => {
+export const updateGroup = async (groupId, adminToken, updates) => {
   try {
     const { adminTokenHash, ...safeUpdates } = updates;
-    const groupRef = ref(database, `groups/${groupId}`);
-    await update(groupRef, safeUpdates);
+    const response = await fetch('/api/admin-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        groupId,
+        adminToken,
+        action: 'updateGroup',
+        payload: safeUpdates
+      })
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update group');
+    }
   } catch (error) {
     console.error(`Failed to updateGroup ${groupId}:`, error);
     throw new Error(`Failed to updateGroup ${groupId}: ${error.message}`);
   }
 };
 
-export const deleteGroup = async (groupId) => {
+export const deleteGroup = async (groupId, adminToken) => {
   try {
-    const groupRef = ref(database, `groups/${groupId}`);
-    await remove(groupRef);
+    const response = await fetch('/api/admin-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        groupId,
+        adminToken,
+        action: 'deleteGroup'
+      })
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete group');
+    }
   } catch (error) {
     console.error(`Failed to deleteGroup ${groupId}:`, error);
     throw new Error(`Failed to deleteGroup ${groupId}: ${error.message}`);
@@ -102,7 +143,7 @@ export const deleteGroup = async (groupId) => {
 };
 
 export const subscribeToGroup = (groupId, callback, onError) => {
-  const groupRef = ref(database, `groups/${groupId}`);
+  const groupRef = ref(database, `groups/${groupId}/meta`);
   const unsubscribe = onValue(groupRef, (snapshot) => {
     callback(snapshot.exists() ? snapshot.val() : null);
   }, (error) => {
