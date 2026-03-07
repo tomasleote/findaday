@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { getDatesBetween, formatDateRange, getTopFilteredOverlaps } from '../utils/overlap';
 import { Calendar as CalendarIcon, Users, Edit2, Play, ChevronLeft, ChevronRight, XIcon, PartyPopper, UserX, TrendingUp, Vote } from 'lucide-react';
 import { TruncatedText } from '../shared/ui';
@@ -6,7 +6,7 @@ import { TruncatedText } from '../shared/ui';
 /**
  * SlidingOverlapCalendar component displays a visual heatmap of availability
  * and allows users to select an overlap period.
- * 
+ *
  * @param {Object} props
  * @param {Date|string} props.startDate - The start date of the date range
  * @param {Date|string} props.endDate - The end date of the date range
@@ -24,7 +24,7 @@ import { TruncatedText } from '../shared/ui';
  *   Note: This function is only called when a selection is locked (i.e. not null).
  *   Expected return type: React Node.
  */
-function SlidingOverlapCalendar({ startDate, endDate, participants, duration, overlaps, onDurationChange, singleDay = false, renderSelectedAction, votingMode, highlightedCandidates }) {
+const SlidingOverlapCalendar = forwardRef(function SlidingOverlapCalendar({ startDate, endDate, participants, duration, overlaps, onDurationChange, singleDay = false, renderSelectedAction, votingMode, highlightedCandidates }, ref) {
     const [currentMonth, setCurrentMonth] = useState(new Date(startDate).getMonth());
     const [currentYear, setCurrentYear] = useState(new Date(startDate).getFullYear());
     const [hoveredDate, setHoveredDate] = useState(null);
@@ -33,6 +33,10 @@ function SlidingOverlapCalendar({ startDate, endDate, participants, duration, ov
     const [debouncedDuration, setDebouncedDuration] = useState(duration);
     const [selectedCandidateId, setSelectedCandidateId] = useState(null);
     const [hoveredCandidateId, setHoveredCandidateId] = useState(null);
+
+    useImperativeHandle(ref, () => ({
+        clearSelection: () => setSelectedCandidateId(null),
+    }), []);
 
     const { start, end, dateRange } = useMemo(() => ({
         start: new Date(startDate),
@@ -385,7 +389,7 @@ function SlidingOverlapCalendar({ startDate, endDate, participants, duration, ov
                                               const cid = candidateDateMap[dateStr];
                                               if (!cid) return null;
                                               const candidate = votingMode.poll?.candidates?.[cid];
-                                              if (!candidate || candidate.startDate !== dateStr) return null;
+                                              if (!candidate || !getDatesBetween(candidate.startDate, candidate.endDate).includes(dateStr)) return null;
                                               const myVote = votingMode.poll?.votes?.[votingMode.currentParticipantId];
                                               if (!myVote?.candidateIds?.includes(cid)) return null;
                                               return (
@@ -668,6 +672,6 @@ function SlidingOverlapCalendar({ startDate, endDate, participants, duration, ov
             </div>
         </div>
     );
-};
+});
 
 export default SlidingOverlapCalendar;

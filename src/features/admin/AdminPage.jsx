@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { updateGroup, deleteGroup } from '../../services/groupService';
 import { addParticipant, updateParticipant } from '../../services/participantService';
 import { hashPhrase } from '../../services/adminService';
@@ -29,6 +29,7 @@ function AdminPage({ onBack }) {
   const [reminderSending, setReminderSending] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showVotingSetup, setShowVotingSetup] = useState(false);
+  const heatmapRef = useRef(null);
 
   const baseUrl = window.location.origin;
   const participantLink = `${baseUrl}?group=${groupId}`;
@@ -168,6 +169,10 @@ function AdminPage({ onBack }) {
       await createPoll(groupId, { mode, candidates });
       setShowVotingSetup(false);
       addNotification({ type: 'success', title: 'Poll Started', message: 'Participants can now vote.' });
+      addNotification({ type: 'info', title: 'Configure', message: 'Scroll down to view live voting results.' });
+      setTimeout(() => {
+        heatmapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     } catch (err) {
       addNotification({ type: 'error', title: 'Error', message: err.message });
     }
@@ -386,7 +391,8 @@ function AdminPage({ onBack }) {
             onCancel={() => setShowVotingSetup(false)}
           />
         ) : poll ? (
-          <VotingResults
+          <div ref={heatmapRef}>
+            <VotingResults
             group={group}
             participants={participants}
             overlaps={overlaps}
@@ -400,6 +406,7 @@ function AdminPage({ onBack }) {
             onSendInvites={handleSendVoteInvites}
             onSendResult={handleSendVoteResult}
           />
+          </div>
         ) : (
           <OverlapResults
             group={group}

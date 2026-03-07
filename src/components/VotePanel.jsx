@@ -5,7 +5,7 @@ import { Users } from 'lucide-react';
  * Renders inside SlidingOverlapCalendar's details panel when a candidate
  * period is selected during an active poll.
  */
-function VotePanel({ poll, candidateId, currentParticipantId, onVote, isReadOnly, participants = [] }) {
+function VotePanel({ poll, candidateId, currentParticipantId, onVote, isReadOnly, participants = [], onVoteComplete }) {
   if (!poll || !candidateId) return null;
 
   const votes = poll.votes || {};
@@ -23,7 +23,7 @@ function VotePanel({ poll, candidateId, currentParticipantId, onVote, isReadOnly
     .filter(([, v]) => v.candidateIds?.includes(candidateId))
     .map(([id]) => id);
 
-  const handleVote = () => {
+  const handleVote = async () => {
     if (!currentParticipantId || isReadOnly) return;
 
     let newCandidateIds;
@@ -35,7 +35,14 @@ function VotePanel({ poll, candidateId, currentParticipantId, onVote, isReadOnly
         : [...myVotedIds, candidateId];
     }
 
-    onVote({ candidateId, newCandidateIds });
+    try {
+      await onVote({ candidateId, newCandidateIds });
+      if (onVoteComplete) {
+        onVoteComplete();
+      }
+    } catch (err) {
+      console.error('[VotePanel] Vote error:', err);
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Vote, Mail, XCircle } from 'lucide-react';
 import SlidingOverlapCalendar from '../../components/SlidingOverlapCalendar';
 import VotePanel from '../../components/VotePanel';
@@ -17,6 +17,7 @@ function VotingResults({
   const [closingPoll, setClosingPoll] = useState(false);
   const [sendingInvites, setSendingInvites] = useState(false);
   const [sendingResult, setSendingResult] = useState(false);
+  const calendarRef = useRef(null);
 
   if (!poll || !group) return null;
 
@@ -106,6 +107,7 @@ function VotingResults({
 
       {/* Heatmap in voting mode */}
       <SlidingOverlapCalendar
+        ref={calendarRef}
         startDate={group.startDate}
         endDate={group.endDate}
         participants={participants}
@@ -127,6 +129,7 @@ function VotingResults({
               onVote={onVote}
               isReadOnly={!isActive}
               participants={participants}
+              onVoteComplete={() => calendarRef.current?.clearSelection()}
             />
           ) : null
         }
