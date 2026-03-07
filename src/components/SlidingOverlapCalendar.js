@@ -272,6 +272,7 @@ function SlidingOverlapCalendar({ startDate, endDate, participants, duration, ov
                          ${!inRange ? 'text-gray-600 cursor-not-allowed opacity-50' : 'cursor-pointer hover:ring-2 hover:ring-brand-400 hover:ring-offset-1 hover:ring-offset-dark-800'}
                          ${isHighlighted ? 'ring-2 ring-brand-500 shadow-md transform scale-[1.02] z-10' : ''}
                          ${inRange && !isHighlighted ? getHeatmapColor(count, maxParts) : ''}
+                         ${activeBlock.length > 0 && inRange && !isHighlighted ? 'opacity-30' : ''}
                          ${isHighlighted ? 'bg-brand-500 text-white font-bold' : ''}
                       `}
                                         >
