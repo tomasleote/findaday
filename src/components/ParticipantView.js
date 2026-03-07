@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { subscribeToGroup } from '../services/groupService';
 import { addParticipant, updateParticipant, getParticipant, subscribeToParticipants } from '../services/participantService';
 import { getDatesBetween, calculateOverlap, getBestOverlapPeriods } from '../utils/overlap';
@@ -30,6 +30,7 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
   const [heatmapDuration, setHeatmapDuration] = useState('3');
   const [overlaps, setOverlaps] = useState([]);
   const [poll, setPoll] = useState(null);
+  const calendarRef = useRef(null);
 
   useEffect(() => {
     if (!groupId) return;
@@ -354,6 +355,7 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
               {poll ? (poll.status === 'active' ? 'Vote on Proposed Dates' : 'Poll Results') : 'Current Group Availability'}
             </h2>
             <SlidingOverlapCalendar
+              ref={calendarRef}
               startDate={group.startDate}
               endDate={group.endDate}
               participants={participants}
@@ -375,6 +377,7 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
                       onVote={handleVote}
                       isReadOnly={poll.status === 'closed' || !currentParticipantId}
                       participants={participants}
+                      onVoteComplete={() => calendarRef.current?.clearSelection()}
                     />
                   )
                 : undefined
