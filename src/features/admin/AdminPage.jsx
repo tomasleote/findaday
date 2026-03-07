@@ -116,6 +116,7 @@ function AdminPage({ onBack }) {
         method: 'POST',
         body: JSON.stringify({
           groupId,
+          adminToken,
           groupName: group.name,
           startDate: group.startDate,
           participants: participants?.filter(p => p?.email && p.email.trim() !== '').map(p => ({ email: p.email })) || [],

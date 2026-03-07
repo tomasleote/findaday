@@ -3,6 +3,7 @@
 // Required env vars: EMAIL_USER, EMAIL_PASSWORD (Gmail App Password)
 
 const nodemailer = require('nodemailer');
+const { checkRateLimit } = require('./_lib/rateLimit');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -18,6 +19,11 @@ module.exports = async function handler(req, res) {
   if (!process.env.RESEND_API_KEY) {
     console.error('[send-welcome] RESEND_API_KEY is not set');
     return res.status(500).json({ error: 'Email service is not configured' });
+  }
+
+  const { allowed } = await checkRateLimit(`welcome:${groupId}`, 5, 60 * 60 * 1000);
+  if (!allowed) {
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
   }
 
   const origin = baseUrl || 'https://vacation-scheduler.vercel.app';

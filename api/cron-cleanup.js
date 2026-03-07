@@ -1,5 +1,5 @@
 // Vercel Serverless Cron Job — GET /api/cron-cleanup
-// Automatically triggered by Vercel on a schedule (e.g. 1st and 15th of the month).
+// Automatically triggered by Vercel on a schedule (daily at 3 AM).
 // Must have authentication from Vercel via CRON_SECRET header to run.
 // Environment requirements:
 // - CRON_SECRET: Automatically injected by Vercel for Cron authorization
@@ -15,7 +15,7 @@ if (!admin.apps.length) {
             credential: admin.credential.cert({
                 projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
                 clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                // Replace literal literal \n blocks with actual newlines in private key if they exist
+                // Replace literal \n blocks with actual newlines in private key if they exist
                 privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
             }),
             databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
@@ -24,6 +24,9 @@ if (!admin.apps.length) {
         console.error('[cron-cleanup] Firebase admin init error:', err);
     }
 }
+
+const BATCH_SIZE = 50;
+const QUERY_LIMIT = 500;
 
 module.exports = async function handler(req, res) {
     // 1. Validate Cron Secret Header (Vercel security requirement)
@@ -40,35 +43,74 @@ module.exports = async function handler(req, res) {
 
     try {
         const db = admin.database();
-
-        // We want to delete groups older than 90 days.
         const cutoffDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+        const cutoffISO = cutoffDate.toISOString();
 
-        // Query only the metadata nodes to avoid downloading massive participant arrays
-        // for every group in the database during the cron sweep
-        const snapshot = await db.ref('groups').orderByChild('meta/createdAt').endAt(cutoffDate.toISOString()).get();
+        // --- Step 1: Clean up expired groups ---
+        // Use server-side query with a limit to avoid downloading the entire database.
+        // The index on meta/createdAt is defined in database.rules.json.
+        const snapshot = await db.ref('groups')
+            .orderByChild('meta/createdAt')
+            .endAt(cutoffISO)
+            .limitToFirst(QUERY_LIMIT)
+            .get();
 
-        const updates = {};
-        let deletedCount = 0;
-
+        const groupIds = [];
         if (snapshot.exists()) {
             snapshot.forEach((child) => {
-                const group = child.val();
-                const createdAt = group.meta?.createdAt || group.createdAt;
-                if (createdAt && new Date(createdAt) < cutoffDate) {
-                    updates[child.key] = null; // Setting a node to null deletes it in RTDB
-                    deletedCount++;
+                groupIds.push(child.key);
+            });
+        }
+
+        // Delete in batches of BATCH_SIZE to avoid oversized single writes
+        for (let i = 0; i < groupIds.length; i += BATCH_SIZE) {
+            const batch = groupIds.slice(i, i + BATCH_SIZE);
+            const updates = {};
+            batch.forEach((id) => { updates[id] = null; });
+            await db.ref('groups').update(updates);
+        }
+
+        const hasMore = groupIds.length === QUERY_LIMIT;
+
+        // --- Step 2: Clean up expired rate limit entries ---
+        let rateLimitsCleaned = 0;
+        const rateLimitsSnapshot = await db.ref('_rateLimits').get();
+        if (rateLimitsSnapshot.exists()) {
+            const cleanups = {};
+            const oneHourAgo = Date.now() - 60 * 60 * 1000;
+            rateLimitsSnapshot.forEach((child) => {
+                const data = child.val();
+                if (data && data.windowStart < oneHourAgo) {
+                    cleanups[child.key] = null;
+                    rateLimitsCleaned++;
                 }
             });
-
-            // Apply mass deletion all at once if there are expirations
-            if (Object.keys(updates).length > 0) {
-                await db.ref('groups').update(updates);
+            if (rateLimitsCleaned > 0) {
+                await db.ref('_rateLimits').update(cleanups);
             }
         }
 
-        console.log(`[cron-cleanup] Sweep complete. Cleaned up ${deletedCount} old groups.`);
-        return res.status(200).json({ success: true, deleted: deletedCount });
+        // --- Structured audit log ---
+        console.log(JSON.stringify({
+            event: 'cron-cleanup',
+            timestamp: new Date().toISOString(),
+            cutoffDate: cutoffISO,
+            groupsDeleted: groupIds.length,
+            batchCount: Math.ceil(groupIds.length / BATCH_SIZE),
+            groupIds,
+            hasMore,
+            rateLimitsCleaned,
+        }));
+
+        return res.status(200).json({
+            success: true,
+            deleted: groupIds.length,
+            rateLimitsCleaned,
+            hasMore,
+            message: hasMore
+                ? 'Batch limit reached. Run again to continue cleanup.'
+                : 'All expired groups have been cleaned up.',
+        });
 
     } catch (err) {
         console.error('[cron-cleanup] Error running cleanup sweep:', err);

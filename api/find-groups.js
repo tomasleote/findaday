@@ -18,30 +18,7 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-const emailRateLimits = new Map();
-const ipRateLimits = new Map();
-const RATELIMIT_WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 3;
-
-function isRateLimited(ip, email) {
-  const now = Date.now();
-  for (const [key, data] of emailRateLimits.entries()) {
-    if (now - data.timestamp > RATELIMIT_WINDOW_MS) emailRateLimits.delete(key);
-  }
-  for (const [key, data] of ipRateLimits.entries()) {
-    if (now - data.timestamp > RATELIMIT_WINDOW_MS) ipRateLimits.delete(key);
-  }
-  let ipData = ipRateLimits.get(ip) || { count: 0, timestamp: now };
-  let emailData = emailRateLimits.get(email) || { count: 0, timestamp: now };
-  if (ipData.count >= MAX_REQUESTS_PER_WINDOW || emailData.count >= MAX_REQUESTS_PER_WINDOW) {
-    return true;
-  }
-  ipData.count++;
-  emailData.count++;
-  ipRateLimits.set(ip, ipData);
-  emailRateLimits.set(email, emailData);
-  return false;
-}
+const { checkRateLimit } = require('./_lib/rateLimit');
 
 async function getAllGroups(options = {}) {
   let url = `${DB_URL.replace(/\/$/, '')}/groups.json`;
@@ -87,10 +64,12 @@ module.exports = async function handler(req, res) {
   const targetEmail = email.trim().toLowerCase();
   const ip = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown';
 
-  if (isRateLimited(ip, targetEmail)) {
+  const { allowed } = await checkRateLimit(`find:${targetEmail}`, 3, 60 * 1000);
+  if (!allowed) {
+    const crypto = require('crypto');
     const hashedEmail = crypto.createHash('sha256').update(targetEmail).digest('hex').substring(0, 8);
     console.warn(`[find-groups] Rate limit exceeded for email hash ${hashedEmail}`);
-    return res.status(200).json({ found: 0 });
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
   }
 
   // Scan all groups for adminEmail match

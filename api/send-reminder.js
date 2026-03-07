@@ -3,6 +3,8 @@
 // Required env vars: EMAIL_USER, EMAIL_PASSWORD (Gmail App Password)
 
 const nodemailer = require('nodemailer');
+const { checkRateLimit } = require('./_lib/rateLimit');
+const { validateAdminToken } = require('./_lib/adminAuth');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,6 +16,17 @@ module.exports = async function handler(req, res) {
   if (!process.env.RESEND_API_KEY) {
     console.error('[send-reminder] RESEND_API_KEY is not set');
     return res.status(500).json({ error: 'Email service is not configured' });
+  }
+
+  const { adminToken } = req.body ?? {};
+  const isAdmin = await validateAdminToken(groupId, adminToken);
+  if (!isAdmin) {
+    return res.status(403).json({ error: 'Invalid admin token' });
+  }
+
+  const { allowed } = await checkRateLimit(`reminder:${groupId}`, 3, 60 * 60 * 1000);
+  if (!allowed) {
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
   }
 
   const allParticipants = Array.isArray(participants) ? participants : [];
