@@ -92,9 +92,21 @@ export const getParticipants = async (groupId) => {
   return snapshot.exists() ? Object.values(snapshot.val()) : [];
 };
 
-export const deleteParticipant = async (groupId, participantId) => {
-  const participantRef = ref(database, `groups/${groupId}/participants/${participantId}`);
-  await remove(participantRef);
+export const deleteParticipant = async (groupId, adminToken, participantId) => {
+  const response = await fetch('/api/admin-action', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      groupId,
+      adminToken,
+      action: 'deleteParticipant',
+      payload: { participantId }
+    })
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to delete participant');
+  }
 };
 
 export const subscribeToParticipants = (groupId, callback, onError) => {

@@ -4,8 +4,8 @@
     ".write": false,
     "groups": {
       "$groupId": {
-        ".read": "true",
-        ".write": "!data.exists() || newData.exists()",
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || newData.exists())",
         "id": {
           ".write": "!data.exists()"
         },
@@ -37,9 +37,10 @@
           ".validate": "newData.hasChildren()"
         },
         "participants": {
-          ".read": "true",
+          ".read": "auth != null",
+          ".validate": "newData.numChildren() <= 150",
           "$participantId": {
-            ".write": "!data.exists() || (data.exists() && newData.exists()) || !newData.exists()",
+            ".write": "auth != null && (!data.exists() || (data.exists() && newData.exists()) || !newData.exists())",
             "name": {
               ".validate": "newData.isString() && newData.val().length <= 100"
             },
@@ -53,10 +54,13 @@
               ".validate": "newData.isString()"
             },
             "availableDays": {
-              ".validate": "newData.exists()"
+              ".validate": "newData.numChildren() <= 400",
+              "$dayIndex": {
+                ".validate": "newData.isString() && newData.val().length <= 10"
+              }
             },
             "id": {
-              ".validate": "newData.isString()"
+              ".validate": "newData.isString() && newData.val() === $participantId"
             },
             "createdAt": {
               ".write": "!data.exists()"
@@ -64,8 +68,8 @@
           }
         },
         "poll": {
-          ".read": "true",
-          ".write": "!data.exists() || newData.exists() || !newData.exists()",
+          ".read": "auth != null",
+          ".write": "auth != null && (!data.exists() || newData.exists() || !newData.exists())",
           "status": {
             ".validate": "newData.isString() && (newData.val() === 'active' || newData.val() === 'closed')"
           },
@@ -73,7 +77,8 @@
             ".validate": "newData.isString() && (newData.val() === 'single' || newData.val() === 'multi')"
           },
           "candidates": {
-            ".write": "true",
+            ".write": "auth != null",
+            ".validate": "newData.numChildren() <= 15",
             "$candidateId": {
               "startDate": {
                 ".validate": "newData.isString()"
@@ -87,9 +92,9 @@
             }
           },
           "votes": {
-            ".write": "true",
+            ".write": "auth != null",
             "$participantId": {
-              ".write": "true",
+              ".write": "auth != null",
               "candidateIds": {
                 ".validate": "newData.hasChildren() || newData.isString()"
               },

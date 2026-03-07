@@ -80,21 +80,44 @@ export const getGroup = async (groupId) => {
   }
 };
 
-export const updateGroup = async (groupId, updates) => {
+export const updateGroup = async (groupId, adminToken, updates) => {
   try {
     const { adminTokenHash, ...safeUpdates } = updates;
-    const groupRef = ref(database, `groups/${groupId}`);
-    await update(groupRef, safeUpdates);
+    const response = await fetch('/api/admin-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        groupId,
+        adminToken,
+        action: 'updateGroup',
+        payload: safeUpdates
+      })
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update group');
+    }
   } catch (error) {
     console.error(`Failed to updateGroup ${groupId}:`, error);
     throw new Error(`Failed to updateGroup ${groupId}: ${error.message}`);
   }
 };
 
-export const deleteGroup = async (groupId) => {
+export const deleteGroup = async (groupId, adminToken) => {
   try {
-    const groupRef = ref(database, `groups/${groupId}`);
-    await remove(groupRef);
+    const response = await fetch('/api/admin-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        groupId,
+        adminToken,
+        action: 'deleteGroup'
+      })
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete group');
+    }
   } catch (error) {
     console.error(`Failed to deleteGroup ${groupId}:`, error);
     throw new Error(`Failed to deleteGroup ${groupId}: ${error.message}`);
