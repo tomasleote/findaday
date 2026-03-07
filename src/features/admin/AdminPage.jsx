@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { updateGroup, deleteGroup } from '../../services/groupService';
 import { addParticipant, updateParticipant } from '../../services/participantService';
 import { hashPhrase } from '../../services/adminService';
@@ -54,6 +54,16 @@ function AdminPage({ onBack }) {
   } = useGroupData(groupId, adminToken, onBack);
 
   const participantActions = useParticipantActions(groupId, group, participants, setParticipants);
+
+  // Auto-scroll to heatmap when poll starts
+  useEffect(() => {
+    if (poll && heatmapRef.current) {
+      setTimeout(() => {
+        heatmapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        addNotification({ type: 'info', title: 'Configure Poll', message: 'View live voting results below.' });
+      }, 100);
+    }
+  }, [poll, addNotification]);
 
   const handleSaveEdit = useCallback(async () => {
     try {
@@ -169,10 +179,6 @@ function AdminPage({ onBack }) {
       await createPoll(groupId, { mode, candidates });
       setShowVotingSetup(false);
       addNotification({ type: 'success', title: 'Poll Started', message: 'Participants can now vote.' });
-      addNotification({ type: 'info', title: 'Configure', message: 'Scroll down to view live voting results.' });
-      setTimeout(() => {
-        heatmapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
     } catch (err) {
       addNotification({ type: 'error', title: 'Error', message: err.message });
     }
