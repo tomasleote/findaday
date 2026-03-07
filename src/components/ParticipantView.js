@@ -11,6 +11,7 @@ import { subscribeToPoll, submitVote, closePoll } from '../services/pollService'
 import CalendarView from './CalendarView';
 import SlidingOverlapCalendar from './SlidingOverlapCalendar';
 import VotePanel from './VotePanel';
+import CalendarEventButton from '../features/admin/CalendarEventButton';
 import SchemaMarkup from '../features/landing/SchemaMarkup';
 import { ChevronDown, ChevronUp, CalendarRange, Users } from 'lucide-react';
 
@@ -369,17 +370,27 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
                 currentParticipantId: currentParticipantId,
               } : undefined}
               renderSelectedAction={poll
-                ? ({ candidateId }) => (
-                    <VotePanel
-                      poll={poll}
-                      candidateId={candidateId}
-                      currentParticipantId={currentParticipantId}
-                      onVote={handleVote}
-                      isReadOnly={poll.status === 'closed' || !currentParticipantId}
-                      participants={participants}
-                      onVoteComplete={() => calendarRef.current?.clearSelection()}
-                    />
-                  )
+                ? ({ candidateId, startDate, endDate }) => {
+                    const candidate = poll?.candidates?.[candidateId];
+                    return (
+                      <div className="space-y-3">
+                        <VotePanel
+                          poll={poll}
+                          candidateId={candidateId}
+                          currentParticipantId={currentParticipantId}
+                          onVote={handleVote}
+                          isReadOnly={poll.status === 'closed' || !currentParticipantId}
+                          participants={participants}
+                          onVoteComplete={() => calendarRef.current?.clearSelection()}
+                        />
+                        <CalendarEventButton
+                          group={group}
+                          overlap={{ startDate: candidate?.startDate, endDate: candidate?.endDate, availableCount: participants.length }}
+                          participantCount={participants.length}
+                        />
+                      </div>
+                    );
+                  }
                 : undefined
               }
             />
