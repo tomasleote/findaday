@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const crypto = require('crypto');
 
 // Ensure admin is initialized mapping to project variables 
 function getDb() {
@@ -14,6 +15,7 @@ function getDb() {
             });
         } catch (err) {
             console.error('[_lib/rateLimit] Firebase admin init error:', err);
+            throw new Error('Firebase admin initialization failed in rateLimit');
         }
     }
     return admin.database();
@@ -52,8 +54,8 @@ async function checkRateLimit(key, maxRequests, windowMs) {
 }
 
 function encodeKey(key) {
-    // Firebase node keys cannot contain . $ # [ ] / characters
-    return key.replace(/[.$#\[\]/]/g, '_');
+    // Hash the logical key to avoid storing PII (like emails) and to normalize keys safely
+    return crypto.createHash('sha256').update(key).digest('hex');
 }
 
 module.exports = { checkRateLimit };

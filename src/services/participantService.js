@@ -30,16 +30,13 @@ export const addParticipant = async (groupId, participantData) => {
   }
 
   // Check group capacity limits loosely here (capacity is rarely an exact race condition issue, name reuse is more critical)
-  try {
-    const participantsRef = ref(database, `groups/${groupId}/participants`);
-    const snap = await get(participantsRef);
-    if (snap.exists() && Object.keys(snap.val()).length >= MAX_PARTICIPANTS_PER_GROUP) {
-      // Rollback name reservation if full
-      await remove(nameRef);
-      throw new Error(`Group is full (max ${MAX_PARTICIPANTS_PER_GROUP} participants).`);
-    }
-  } catch (e) { /* Ignore non-existent snapshot */ }
-
+  const participantsRef = ref(database, `groups/${groupId}/participants`);
+  const snap = await get(participantsRef);
+  if (snap.exists() && Object.keys(snap.val()).length >= MAX_PARTICIPANTS_PER_GROUP) {
+    // Rollback name reservation if full
+    await remove(nameRef);
+    throw new Error(`Group is full (max ${MAX_PARTICIPANTS_PER_GROUP} participants).`);
+  }
 
   // Step 2: Write participant data payload directly (no transaction spanning everyone's data)
   const participantRef = ref(database, `groups/${groupId}/participants/${participantId}`);
@@ -59,6 +56,10 @@ export const addParticipant = async (groupId, participantData) => {
     await updateDailyCounts(groupId, [], availableDays);
   } catch (e) {
     console.error("Failed writing availability/counts:", e);
+    // Compensating rollback
+    await remove(participantRef);
+    await remove(nameRef);
+    throw new Error('Failed to save availability data. Please try again.');
   }
 
   return participantId;
@@ -130,6 +131,7 @@ export const updateParticipant = async (groupId, participantId, updates) => {
       await updateDailyCounts(groupId, oldDays, safeUpdates.availableDays);
     } catch (e) {
       console.error("Failed updating availability/counts:", e);
+      throw new Error('Failed to update availability data. Please try again.');
     }
   }
 };

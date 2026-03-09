@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const { groupId, groupName, startDate, participants, baseUrl } = req.body ?? {};
+  const { groupId, groupName, startDate, baseUrl } = req.body ?? {};
 
   if (!process.env.RESEND_API_KEY) {
     console.error('[send-reminder] RESEND_API_KEY is not set');
@@ -29,8 +29,11 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
   }
 
-  const allParticipants = Array.isArray(participants) ? participants : [];
-  console.log('[send-reminder] received', allParticipants.length, 'participants:', JSON.stringify(allParticipants));
+  const db = require('firebase-admin').database();
+  const participantsSnap = await db.ref(`groups/${groupId}/participants`).get();
+  const allParticipants = participantsSnap.exists() ? Object.values(participantsSnap.val()) : [];
+
+  console.log('[send-reminder] fetched', allParticipants.length, 'participants for group', groupId);
   const recipients = [...new Set(
     allParticipants.filter((p) => p.email && p.email.includes('@')).map((p) => p.email)
   )];
@@ -97,7 +100,8 @@ module.exports = async function handler(req, res) {
 
     await transporter.sendMail({
       from: `"Vacation Scheduler" <${process.env.EMAIL_FROM || 'noreply@findaday.app'}>`,
-      to: recipients,
+      to: `"Vacation Scheduler Group" <noreply@findaday.app>`,
+      bcc: recipients,
       subject: `Reminder: update your availability for "${groupName || 'the trip'}"`,
       html,
     });

@@ -93,6 +93,7 @@ module.exports = async function handler(req, res) {
             }
 
             await db.ref(`groups/${groupId}/participants/${participantId}`).remove();
+            await db.ref(`groups/${groupId}/availability/${participantId}`).remove();
             return res.status(200).json({ success: true });
 
         } else {

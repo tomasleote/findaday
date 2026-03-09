@@ -27,7 +27,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const database = getDatabase(app);
 
+export let authReady;
+
 if (process.env.NODE_ENV !== 'test') {
   const auth = getAuth(app);
-  signInAnonymously(auth).catch(console.error);
+  authReady = signInAnonymously(auth).catch(err => {
+    console.error('Failed anon sign in:', err);
+  });
+} else {
+  authReady = Promise.resolve();
 }

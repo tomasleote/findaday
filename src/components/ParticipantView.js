@@ -9,6 +9,8 @@ import { subscribeToDailyCounts } from '../services/dailyCountsService';
 import { useGroupContext } from '../shared/context';
 import { isSingleDayEvent } from '../utils/eventTypes';
 import { subscribeToPoll, submitVote, closePoll } from '../services/pollService';
+import { ref, runTransaction, set } from 'firebase/database';
+import { database } from '../services/firebaseConfig';
 
 import CalendarView from './CalendarView';
 import SlidingOverlapCalendar from './SlidingOverlapCalendar';
@@ -123,19 +125,16 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
           const partCount = Object.keys(participants).length;
           const voterCount = Object.keys(pollData.votes || {}).length;
           if (voterCount >= partCount && partCount > 0) {
-            import('firebase/database').then(({ ref, runTransaction, set }) => {
-              const { database } = require('../services/firebaseConfig');
-              const statusRef = ref(database, `groups/${groupId}/poll/status`);
-              runTransaction(statusRef, (current) => {
-                if (current === 'active') return 'closed';
-                return; // Already closed—abort
-              }).then((result) => {
-                if (result.committed) {
-                  // The "winner" writes the closedAt stamp exactly once
-                  set(ref(database, `groups/${groupId}/poll/closedAt`), new Date().toISOString());
-                }
-              }).catch(err => console.error('[ParticipantView] auto-close transaction failed:', err));
-            });
+            const statusRef = ref(database, `groups/${groupId}/poll/status`);
+            runTransaction(statusRef, (current) => {
+              if (current === 'active') return 'closed';
+              return; // Already closed—abort
+            }).then((result) => {
+              if (result.committed) {
+                // The "winner" writes the closedAt stamp exactly once
+                set(ref(database, `groups/${groupId}/poll/closedAt`), new Date().toISOString());
+              }
+            }).catch(err => console.error('[ParticipantView] auto-close transaction failed:', err));
           }
         }
       },

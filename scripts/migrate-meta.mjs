@@ -81,6 +81,7 @@ async function migrateMeta() {
 
     } catch (e) {
         console.error("Migration failed:", e);
+        process.exit(1);
     }
 
     process.exit(0);
