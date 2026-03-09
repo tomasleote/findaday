@@ -5,6 +5,90 @@ import { Helmet } from 'react-helmet-async';
 import { getBlogPostBySlug, blogPosts } from '../../content/blogData';
 import { LoadingSpinner } from '../../shared/ui';
 
+// Helper to extract text from React children array
+const extractTextContent = (children) => {
+    let text = '';
+    React.Children.forEach(children, child => {
+        if (typeof child === 'string') text += child;
+        else if (child && child.props && child.props.children) {
+            text += extractTextContent(child.props.children);
+        }
+    });
+    return text.trim();
+};
+
+const markdownComponents = {
+    // Callout boxes: detect > **Tip:**, > **Important:**, > **Note:** in blockquotes
+    blockquote: ({ children }) => {
+        const text = extractTextContent(children);
+
+        if (text.startsWith('Tip:') || text.startsWith('💡')) {
+            return (
+                <div className="my-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                    <div className="flex items-start gap-3">
+                        <span className="text-emerald-400 text-lg mt-0.5">💡</span>
+                        <div className="text-emerald-200 text-base leading-relaxed">{children}</div>
+                    </div>
+                </div>
+            );
+        }
+
+        if (text.startsWith('Important:') || text.startsWith('⚠️')) {
+            return (
+                <div className="my-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                    <div className="flex items-start gap-3">
+                        <span className="text-amber-400 text-lg mt-0.5">⚠️</span>
+                        <div className="text-amber-200 text-base leading-relaxed">{children}</div>
+                    </div>
+                </div>
+            );
+        }
+
+        if (text.startsWith('Note:') || text.startsWith('📝')) {
+            return (
+                <div className="my-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+                    <div className="flex items-start gap-3">
+                        <span className="text-blue-400 text-lg mt-0.5">📝</span>
+                        <div className="text-blue-200 text-base leading-relaxed">{children}</div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Default blockquote
+        return (
+            <blockquote className="border-l-4 border-brand-500/50 pl-4 my-6 italic text-gray-400">
+                {children}
+            </blockquote>
+        );
+    },
+
+    // Internal links rendered as React Router <Link> components
+    a: ({ href, children }) => {
+        if (href && href.startsWith('/')) {
+            return <Link to={href} className="text-brand-400 hover:text-brand-300 underline transition-colors">{children}</Link>;
+        }
+        return <a href={href} target="_blank" rel="noopener noreferrer" className="text-brand-400 hover:text-brand-300 underline transition-colors">{children}</a>;
+    },
+
+    // Headings with anchor IDs
+    h2: ({ children }) => {
+        const id = extractTextContent(children).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        return <h2 id={id}>{children}</h2>;
+    },
+    h3: ({ children }) => {
+        const id = extractTextContent(children).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        return <h3 id={id}>{children}</h3>;
+    },
+
+    // Horizontal rule as a styled section divider
+    hr: () => (
+        <div className="my-10 flex items-center gap-4">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-dark-700 to-transparent"></div>
+        </div>
+    ),
+};
+
 export default function BlogPost({ onBack }) {
     const { slug } = useParams();
     const [content, setContent] = useState('');
@@ -124,7 +208,7 @@ export default function BlogPost({ onBack }) {
             prose-li:text-gray-300 prose-li:text-lg prose-ul:mb-6
             prose-strong:text-white prose-strong:font-bold"
                     >
-                        <ReactMarkdown>{content}</ReactMarkdown>
+                        <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
                     </article>
                 )}
             </main>

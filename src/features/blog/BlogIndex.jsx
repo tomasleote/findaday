@@ -61,8 +61,20 @@ export default function BlogIndex({ onBack }) {
                                     </div>
                                 </div>
                                 <div className="p-8 flex-1 flex flex-col">
-                                    <div className="text-xs font-bold text-brand-500 mb-3 tracking-wider uppercase">
-                                        {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    <div className="flex items-center gap-3 text-xs font-bold tracking-wider uppercase mb-3">
+                                        <span className="text-brand-500">
+                                            {new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </span>
+                                        <span className="text-dark-700">•</span>
+                                        <span className="text-gray-500">{post.readingTime} min read</span>
+                                        {post.category && (
+                                            <>
+                                                <span className="text-dark-700">•</span>
+                                                <span className="px-2 py-0.5 bg-brand-500/10 text-brand-400 rounded-full text-[10px]">
+                                                    {post.category}
+                                                </span>
+                                            </>
+                                        )}
                                     </div>
                                     <h2 className="text-2xl font-bold text-gray-50 mb-3 group-hover:text-brand-400 transition-colors line-clamp-2">
                                         {post.title}

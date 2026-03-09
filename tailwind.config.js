@@ -41,7 +41,24 @@ module.exports = {
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
+      typography: (theme) => ({
+        invert: {
+          css: {
+            '--tw-prose-body': theme('colors.gray.300'),
+            '--tw-prose-headings': theme('colors.white'),
+            '--tw-prose-links': theme('colors.brand.400'),
+            '--tw-prose-bold': theme('colors.white'),
+            '--tw-prose-bullets': theme('colors.brand.400'),
+            '--tw-prose-quotes': theme('colors.gray.300'),
+            '--tw-prose-quote-borders': theme('colors.brand.500'),
+            '--tw-prose-counters': theme('colors.brand.400'),
+            '--tw-prose-hr': theme('colors.dark.700'),
+          },
+        },
+      }),
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 }
