@@ -136,10 +136,8 @@ function RootHandler() {
     setGroupId(recGId);
     setAdminToken(newAdminToken);
     try { localStorage.setItem(`fad_admin_${recGId}`, newAdminToken); } catch { }
-
-    // Instead of navigate() which changes the URL and triggers the useEffect to re-run, 
-    // we simply set the current page directly.
     setCurrentPage('admin');
+    navigate(`/?group=${recGId}&admin=${newAdminToken}`);
   };
 
   const isAdmin = !!adminToken;
@@ -157,6 +155,13 @@ function RootHandler() {
             groupId={groupId}
             adminToken={adminToken}
             onEnterAdmin={handleEnterAdmin}
+            onBack={handleBackHome}
+          />
+        </ErrorBoundary>
+      )}
+      {currentPage === 'admin' && (
+        <ErrorBoundary>
+          <AdminPanel
             onBack={handleBackHome}
           />
         </ErrorBoundary>
