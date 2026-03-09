@@ -118,6 +118,15 @@ function HomePage({ onCreateGroup, onJoinGroup, onRecoverAdmin }) {
               Join Event
             </Button>
           </div>
+
+          <div className="mt-8">
+            <button
+              onClick={() => { setShowRecover(true); setShowCreate(false); setShowJoin(false); }}
+              className="text-sm font-medium text-gray-500 hover:text-gray-300 transition-colors inline-flex items-center gap-1.5"
+            >
+              <KeyRound size={14} /> Lost your admin link? Recover it here.
+            </button>
+          </div>
         </motion.div>
 
         {/* How It Works */}
