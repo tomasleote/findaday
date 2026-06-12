@@ -53,7 +53,7 @@ const prerender = async () => {
     const baseHtml = fs.readFileSync(TEMPLATE_FILE, 'utf8');
     const routes = getRoutes();
 
-    console.log(`🚀 Starting Surgical SEO injection for ${routes.length} routes...`);
+    console.log(`Pre-rendering ${routes.length} routes...`);
 
     for (const route of routes) {
         const { path: routePath, title, description } = route;
@@ -82,10 +82,10 @@ const prerender = async () => {
         // Write file
         const filePath = path.join(dirPath, 'index.html');
         fs.writeFileSync(filePath, html);
-        console.log(`✅ Pre-rendered: ${routePath}`);
+        console.log(`Pre-rendered: ${routePath}`);
     }
 
-    console.log('✨ Surgical SEO injection complete!');
+    console.log('Pre-rendering complete.');
 };
 
 prerender();

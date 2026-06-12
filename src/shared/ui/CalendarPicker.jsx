@@ -1,14 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Label } from './Input';
 import {
-  fromYMD, toYMD, todayYMD,
+  fromYMD, toYMD,
   getDaysInMonth, getFirstDayOfWeek,
   isSameDay, isBefore, isAfter, isToday,
-  formatDisplayDate, formatMonthYear,
+  formatDisplayDate,
 } from '../../utils/dateUtils';
-
-const DAY_NAMES = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+import { CalendarDropdown } from '../calendar/CalendarDropdown';
 
 function CalendarPicker({
   label,
@@ -26,7 +25,6 @@ function CalendarPicker({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
-  // Close on outside click
   useEffect(() => {
     if (!isOpen) return;
     function onMouseDown(e) {
@@ -38,7 +36,6 @@ function CalendarPicker({
     return () => document.removeEventListener('mousedown', onMouseDown);
   }, [isOpen]);
 
-  // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
     function onKeyDown(e) {
@@ -50,7 +47,6 @@ function CalendarPicker({
 
   const handleToggle = () => {
     if (!isOpen) {
-      // Jump view to selected date, or minDate, or today
       const jumpTo =
         (value ? fromYMD(value) : null) ||
         (minDate ? fromYMD(minDate) : null) ||
@@ -91,11 +87,8 @@ function CalendarPicker({
   const maxDateObj = maxDate ? fromYMD(maxDate) : null;
   const selectedDate = value ? fromYMD(value) : null;
 
-  // Disable prev if last day of previous month is before minDate
   const isPrevDisabled =
     !!minDateObj && isBefore(new Date(viewYear, viewMonth, 0), minDateObj);
-
-  // Disable next if first day of next month is after maxDate
   const isNextDisabled =
     !!maxDateObj && isAfter(new Date(viewYear, viewMonth + 1, 1), maxDateObj);
 
@@ -108,24 +101,20 @@ function CalendarPicker({
 
   const getDayAriaLabel = (day) => {
     const date = new Date(viewYear, viewMonth, day);
-    let label = date.toLocaleDateString('en-US', {
+    let ariaLabel = date.toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
     });
-    if (isToday(date)) label += ', today';
-    if (selectedDate && isSameDay(date, selectedDate)) label += ', selected';
-    return label;
+    if (isToday(date)) ariaLabel += ', today';
+    if (selectedDate && isSameDay(date, selectedDate)) ariaLabel += ', selected';
+    return ariaLabel;
   };
-
-  const daysInMonth = getDaysInMonth(viewYear, viewMonth);
-  const firstDayOffset = getFirstDayOfWeek(viewYear, viewMonth);
 
   return (
     <div ref={containerRef} className={`relative${className ? ` ${className}` : ''}`}>
       {label && <Label htmlFor={id}>{label}</Label>}
 
-      {/* Trigger button */}
       <button
         type="button"
         id={id}
@@ -146,101 +135,23 @@ function CalendarPicker({
         <Calendar size={15} className="text-gray-500 shrink-0" />
       </button>
 
-      {/* Hidden input for form integration */}
       <input type="hidden" name={id} value={value} />
 
-      {/* Calendar grid */}
       {isOpen && (
-        <div
-          className="absolute top-full left-0 right-0 mt-1 bg-dark-900 border border-dark-700 rounded-xl p-3 animate-fade-in z-50 shadow-lg"
-          role="grid"
-          aria-label={formatMonthYear(viewYear, viewMonth)}
-        >
-          {/* Month navigation */}
-          <div className="flex items-center justify-between mb-3">
-            <button
-              type="button"
-              onClick={prevMonth}
-              disabled={isPrevDisabled}
-              aria-label="Previous month"
-              className="p-1 rounded-md text-gray-400 hover:text-gray-100 hover:bg-dark-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="text-sm font-semibold text-gray-200">
-              {formatMonthYear(viewYear, viewMonth)}
-            </span>
-            <button
-              type="button"
-              onClick={nextMonth}
-              disabled={isNextDisabled}
-              aria-label="Next month"
-              className="p-1 rounded-md text-gray-400 hover:text-gray-100 hover:bg-dark-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-
-          {/* Day-of-week headers */}
-          <div className="grid grid-cols-7 mb-1" role="row">
-            {DAY_NAMES.map((d) => (
-              <div
-                key={d}
-                role="columnheader"
-                className="text-center text-[11px] font-medium text-gray-500 py-1"
-              >
-                {d}
-              </div>
-            ))}
-          </div>
-
-          {/* Day cells */}
-          <div className="grid grid-cols-7 gap-y-0.5" role="rowgroup">
-            {/* Empty offset cells */}
-            {Array.from({ length: firstDayOffset }).map((_, i) => (
-              <div key={`empty-${i}`} role="gridcell" />
-            ))}
-
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const day = i + 1;
-              const disabled = isDayDisabled(day);
-              const dayDate = new Date(viewYear, viewMonth, day);
-              const selected = selectedDate && isSameDay(dayDate, selectedDate);
-              const todayMark = isToday(dayDate);
-              const ariaLabel = getDayAriaLabel(day);
-
-              let cellClass =
-                'w-full aspect-square text-sm rounded-lg flex items-center justify-center transition-colors ';
-
-              if (disabled) {
-                cellClass += 'text-gray-700 cursor-not-allowed opacity-30';
-              } else if (selected) {
-                cellClass += 'bg-brand-500 text-white font-semibold';
-              } else if (todayMark) {
-                cellClass +=
-                  'ring-1 ring-brand-400/60 text-brand-400 hover:bg-dark-700';
-              } else {
-                cellClass +=
-                  'text-gray-300 hover:bg-dark-700 hover:text-gray-100';
-              }
-
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  role="gridcell"
-                  aria-label={ariaLabel}
-                  aria-disabled={disabled}
-                  disabled={disabled}
-                  onClick={() => handleSelect(day)}
-                  className={cellClass}
-                >
-                  {day}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <CalendarDropdown
+          viewYear={viewYear}
+          viewMonth={viewMonth}
+          daysInMonth={getDaysInMonth(viewYear, viewMonth)}
+          firstDayOffset={getFirstDayOfWeek(viewYear, viewMonth)}
+          selectedDate={selectedDate}
+          onPrev={prevMonth}
+          onNext={nextMonth}
+          onSelect={handleSelect}
+          isDayDisabled={isDayDisabled}
+          getDayAriaLabel={getDayAriaLabel}
+          isPrevDisabled={isPrevDisabled}
+          isNextDisabled={isNextDisabled}
+        />
       )}
     </div>
   );

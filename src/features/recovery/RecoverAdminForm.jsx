@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { hashPhrase } from '../../services/adminService';
 import { apiCall } from '../../services/apiService';
-import { KeyRound, Mail, Eye, EyeOff, ArrowRight, Loader2, Search } from 'lucide-react';
+import { ArrowRight, Loader2, Search } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { Input, Label, Button } from '../../shared/ui';
+import { RecoveryTabSelector } from './RecoveryTabSelector';
+import { PassphraseTab } from './PassphraseTab';
+import { EmailTab } from './EmailTab';
+import { FindGroupsTab } from './FindGroupsTab';
 
 /**
  * RecoverAdminForm
@@ -25,8 +29,6 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
     const [showPassphrase, setShowPassphrase] = useState(false);
     const [loading, setLoading] = useState(false);
     const { addNotification } = useNotification();
-
-    const switchTab = (t) => { setTab(t); };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -90,33 +92,7 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
 
     return (
         <div className="space-y-5">
-            {/* Tab selector */}
-            <div className="flex rounded-lg overflow-hidden border border-dark-700">
-                <button
-                    type="button"
-                    onClick={() => switchTab('passphrase')}
-                    className={`flex-1 py-2 text-xs font-semibold flex items-center justify-center gap-1 transition-colors ${tab === 'passphrase' ? 'bg-brand-500 text-white' : 'bg-dark-800 text-gray-400 hover:text-gray-200'
-                        }`}
-                >
-                    <KeyRound size={12} /> Passphrase
-                </button>
-                <button
-                    type="button"
-                    onClick={() => switchTab('email')}
-                    className={`flex-1 py-2 text-xs font-semibold flex items-center justify-center gap-1 transition-colors ${tab === 'email' ? 'bg-brand-500 text-white' : 'bg-dark-800 text-gray-400 hover:text-gray-200'
-                        }`}
-                >
-                    <Mail size={12} /> Email link
-                </button>
-                <button
-                    type="button"
-                    onClick={() => switchTab('find')}
-                    className={`flex-1 py-2 text-xs font-semibold flex items-center justify-center gap-1 transition-colors ${tab === 'find' ? 'bg-brand-500 text-white' : 'bg-dark-800 text-gray-400 hover:text-gray-200'
-                        }`}
-                >
-                    <Search size={12} /> Find groups
-                </button>
-            </div>
+            <RecoveryTabSelector tab={tab} onSwitch={setTab} />
 
             <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -136,78 +112,27 @@ function RecoverAdminForm({ onSuccess, onCancel }) {
                     </div>
                 )}
 
-                {/* Passphrase tab */}
                 {tab === 'passphrase' && (
-                    <div>
-                        <Label>Recovery passphrase</Label>
-                        <div className="relative">
-                            <Input
-                                id="recover-passphrase"
-                                type={showPassphrase ? 'text' : 'password'}
-                                value={passphrase}
-                                onChange={(e) => setPassphrase(e.target.value)}
-                                required
-                                className="text-sm pr-10"
-                                placeholder="Enter the passphrase you set at creation"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassphrase(s => !s)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
-                                aria-label={showPassphrase ? 'Hide passphrase' : 'Show passphrase'}
-                            >
-                                {showPassphrase ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1.5">
-                            Your passphrase was hashed in your browser — it was never stored in plaintext.
-                        </p>
-                    </div>
+                    <PassphraseTab
+                        passphrase={passphrase}
+                        onChange={(e) => setPassphrase(e.target.value)}
+                        showPassphrase={showPassphrase}
+                        onToggleShow={() => setShowPassphrase(s => !s)}
+                    />
                 )}
 
-                {/* Email recovery tab */}
                 {tab === 'email' && (
-                    <div>
-                        <Label>Admin email</Label>
-                        <Input
-                            id="recover-email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            maxLength="254"
-                            className="text-sm"
-                            placeholder="The email you used when creating the group"
-                        />
-                        <p className="text-xs text-gray-500 mt-1.5">
-                            A new admin link will be emailed to you and shown here.
-                        </p>
-                    </div>
+                    <EmailTab
+                        email={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
                 )}
 
-                {/* Find my groups tab */}
                 {tab === 'find' && (
-                    <div className="space-y-3">
-                        <p className="text-sm text-gray-400 leading-relaxed">
-                            Don't remember your Group ID? Enter your email and we'll send you a summary of all groups you administer.
-                        </p>
-                        <div>
-                            <Label>Your admin email</Label>
-                            <Input
-                                id="find-groups-email"
-                                type="email"
-                                value={findEmail}
-                                onChange={(e) => setFindEmail(e.target.value)}
-                                required
-                                maxLength="254"
-                                className="text-sm"
-                                placeholder="The email you used when creating groups"
-                            />
-                        </div>
-                        <p className="text-xs text-gray-500">
-                            You'll receive each group's ID and participant link. Then use the <strong className="text-gray-300">Email link</strong> tab with the Group ID to get a fresh admin link.
-                        </p>
-                    </div>
+                    <FindGroupsTab
+                        findEmail={findEmail}
+                        onChange={(e) => setFindEmail(e.target.value)}
+                    />
                 )}
 
                 <div className="flex gap-3 pt-1">

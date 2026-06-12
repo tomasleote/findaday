@@ -3,10 +3,11 @@ import { KeyRound, Eye, EyeOff } from 'lucide-react';
 import { useNotification } from '../../context/NotificationContext';
 import { Input, Textarea, Label, Button, Card, LocationInput, CalendarPicker } from '../../shared/ui';
 import { todayYMD } from '../../utils/dateUtils';
-import { apiCall } from '../../services/apiService';
 import { MAX_GROUP_NAME_LENGTH } from '../../utils/constants/validation';
-import { EVENT_TYPES, getEventConfig } from '../../utils/eventTypes';
+import { getEventConfig } from '../../utils/eventTypes';
 import { Link } from 'react-router-dom';
+import { EventTypeSelector } from './create/EventTypeSelector';
+import { submitCreateGroup } from './create/createGroupSubmit';
 
 function CreateGroupForm({ onSuccess, onCancel }) {
   const [name, setName] = useState('');
@@ -37,35 +38,8 @@ function CreateGroupForm({ onSuccess, onCancel }) {
     }
 
     setLoading(true);
-
     try {
-      const { createGroup, hashPhrase } = await import('../../firebase');
-      const recoveryPasswordHash = passphrase.trim() ? await hashPhrase(passphrase.trim()) : null;
-      const result = await createGroup({
-        name,
-        description,
-        location,
-        startDate,
-        endDate,
-        eventType,
-        adminEmail,
-        recoveryPasswordHash
-      });
-      // Best-effort welcome email — does not block group creation
-      if (adminEmail) {
-        apiCall('/api/send-welcome', {
-          method: 'POST',
-          body: JSON.stringify({
-            groupId: result.groupId,
-            adminToken: result.adminToken,
-            groupName: name,
-            startDate,
-            endDate,
-            adminEmail,
-            baseUrl: window.location.origin,
-          }),
-        }).catch((err) => { console.error('[send-welcome] fetch failed:', err); });
-      }
+      const result = await submitCreateGroup({ name, description, location, startDate, endDate, eventType, adminEmail, passphrase });
       onSuccess(result);
     } catch (err) {
       console.error('[Group Creation Error] handleSubmit failed:', err);
@@ -81,25 +55,7 @@ function CreateGroupForm({ onSuccess, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6 mb-3" role="radiogroup" aria-label="Event Type">
-        {Object.values(EVENT_TYPES).map((type) => (
-          <button
-            key={type.key}
-            type="button"
-            role="radio"
-            aria-checked={eventType === type.key}
-            aria-label={type.label}
-            onClick={() => setEventType(type.key)}
-            className={`p-2 flex flex-col items-center justify-center rounded-lg border text-center transition-colors ${eventType === type.key
-              ? 'border-brand-500 bg-brand-500/10 text-brand-400'
-              : 'border-dark-700 bg-dark-800 text-gray-400 hover:border-gray-500'
-              }`}
-          >
-            <span className="mb-1" aria-hidden="true">{type.icon}</span>
-            <span className="text-[10px] font-medium leading-tight">{type.label}</span>
-          </button>
-        ))}
-      </div>
+      <EventTypeSelector eventType={eventType} onChange={setEventType} />
 
       <div>
         <Label>Group Name</Label>
@@ -141,7 +97,6 @@ function CreateGroupForm({ onSuccess, onCancel }) {
           value={startDate}
           onChange={(v) => {
             setStartDate(v);
-            // Reset end date if it's now before the new start date
             if (endDate && v && endDate < v) setEndDate('');
           }}
           minDate={todayYMD()}
@@ -228,7 +183,6 @@ function CreateGroupForm({ onSuccess, onCancel }) {
         </Button>
       </div>
     </form>
-
   );
 }
 

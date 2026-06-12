@@ -1,25 +1,16 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { updateGroup, deleteGroup } from '../../services/groupService';
-import { addParticipant, updateParticipant } from '../../services/participantService';
-import { hashPhrase } from '../../services/adminService';
-import { apiCall } from '../../services/apiService';
-import { exportToCSV } from '../../utils/export';
-import { Download, Mail, Vote } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNotification } from '../../context/NotificationContext';
 import { useGroupContext } from '../../shared/context';
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard';
-import { validateParticipantName } from '../../utils/participantValidation';
 import { Button, LoadingSpinner, Card, TruncatedText, ConfirmDialog } from '../../shared/ui';
 import { useGroupData } from './hooks/useGroupData';
 import { useParticipantActions } from './hooks/useParticipantActions';
 import GroupSettings from './GroupSettings';
 import ParticipantTable from './ParticipantTable';
 import AdminAvailability from './AdminAvailability';
-import OverlapResults from './OverlapResults';
-import VotingSetup from './VotingSetup';
-import VotingResults from './VotingResults';
-import { createPoll, closePoll, deletePoll, submitVote } from '../../services/pollService';
 import SchemaMarkup from '../landing/SchemaMarkup';
+import { useAdminPageActions } from './page/useAdminPageActions';
+import { ActionsCard, StatisticsCard, VotingSection } from './page/AdminPageSections';
 
 function AdminPage({ onBack }) {
   const { groupId, adminToken } = useGroupContext();
@@ -67,206 +58,19 @@ function AdminPage({ onBack }) {
     }
   }, [poll, addNotification]);
 
-  const handleSaveEdit = useCallback(async () => {
-    try {
-      const updates = { ...editData };
-      const normalized = updates.newPassphrase?.trim();
-      if (normalized) {
-        updates.recoveryPasswordHash = await hashPhrase(normalized);
-      }
-      delete updates.newPassphrase;
+  const {
+    handleSaveEdit, handleDelete, handleExport, handleSendReminder,
+    handleAdminAvailability, handleStartPoll, handleClosePoll,
+    handleDeletePoll, handleAdminVote, handleSendVoteInvites, handleSendVoteResult,
+  } = useAdminPageActions({
+    groupId, adminToken, group, setGroup, participants, overlaps,
+    editData, setEditing, adminParticipantId, setAdminParticipantId,
+    setAdminSavedDays, setAdminName, setAdminEmail, setAdminDuration,
+    setPoll, setShowVotingSetup, setShowDeleteConfirm, setReminderSending,
+    poll, onBack, addNotification,
+  });
 
-      await updateGroup(groupId, updates);
-      setGroup({ ...group, ...updates });
-      setEditing(false);
-      addNotification({ type: 'success', title: 'Group Updated', message: 'Group settings have been saved.' });
-    } catch (err) {
-      console.error('[Admin Panel Error] handleSaveEdit failed:', err);
-      addNotification({ type: 'error', title: 'Update Failed', message: err.message });
-    }
-  }, [editData, groupId, group, setGroup, addNotification]);
-
-  const handleDelete = useCallback(async () => {
-    try {
-      await deleteGroup(groupId);
-      onBack();
-    } catch (err) {
-      console.error('[Admin Panel Error] handleDelete failed:', err);
-      addNotification({ type: 'error', title: 'Delete Failed', message: err.message });
-    } finally {
-      setShowDeleteConfirm(false);
-    }
-  }, [groupId, onBack, addNotification]);
-
-  const handleExport = useCallback(() => {
-    try {
-      if (group && participants?.length > 0) {
-        exportToCSV(group, participants, overlaps);
-      }
-    } catch (err) {
-      console.error('[Admin Panel Error] handleExport failed:', err);
-      addNotification({ type: 'error', title: 'Export Failed', message: err.message });
-    }
-  }, [group, participants, overlaps, addNotification]);
-
-  const handleSendReminder = useCallback(async () => {
-    setReminderSending(true);
-    try {
-      await apiCall('/api/send-reminder', {
-        method: 'POST',
-        body: JSON.stringify({
-          groupId,
-          groupName: group.name,
-          startDate: group.startDate,
-          participants: participants?.filter(p => p?.email && p.email.trim() !== '').map(p => ({ email: p.email })) || [],
-          baseUrl: window.location.origin,
-        })
-      });
-      addNotification({ type: 'success', title: 'Reminder Sent', message: 'Reminders have been sent to participants.' });
-    } catch (err) {
-      console.error('[Fetch Failure] handleSendReminder failed:', err);
-      addNotification({ type: 'error', title: 'Error', message: err.message || 'Failed to send reminder.' });
-    } finally {
-      setReminderSending(false);
-    }
-  }, [groupId, group, participants, addNotification]);
-
-  const handleAdminAvailability = useCallback(async (formData) => {
-    try {
-      const finalDays = formData.selectedDays || [];
-
-      const nameCheck = validateParticipantName(formData.name, participants, adminParticipantId);
-      if (!nameCheck.valid) {
-        throw new Error(nameCheck.error || 'Invalid participant name.');
-      }
-
-      if (!adminParticipantId) {
-        const participantId = await addParticipant(groupId, {
-          name: formData.name,
-          email: formData.email,
-          duration: formData.duration,
-          availableDays: finalDays,
-          blockType: formData.blockType
-        });
-        setAdminParticipantId(participantId);
-        try {
-          localStorage.setItem(
-            `fad_admin_p_${groupId}`,
-            JSON.stringify({ participantId, name: formData.name, email: formData.email, duration: formData.duration })
-          );
-        } catch { }
-      } else {
-        await updateParticipant(groupId, adminParticipantId, {
-          name: formData.name,
-          email: formData.email,
-          availableDays: finalDays,
-          duration: formData.duration,
-          blockType: formData.blockType
-        });
-      }
-
-      setAdminSavedDays(finalDays);
-      setAdminName(formData.name);
-      setAdminEmail(formData.email || '');
-      setAdminDuration(String(formData.duration));
-      addNotification({ type: 'success', title: 'Availability Saved', message: 'Your availability has been saved!' });
-    } catch (err) {
-      console.error('[Admin Auth Error] handleAdminAvailability failed:', err);
-      addNotification({ type: 'error', title: 'Error', message: err.message });
-    }
-  }, [participants, adminParticipantId, groupId, setAdminParticipantId, setAdminSavedDays, setAdminName, setAdminEmail, setAdminDuration, addNotification]);
-
-  const handleStartPoll = useCallback(async ({ mode, candidates }) => {
-    try {
-      await createPoll(groupId, { mode, candidates });
-      setShowVotingSetup(false);
-      addNotification({ type: 'success', title: 'Poll Started', message: 'Participants can now vote.' });
-    } catch (err) {
-      addNotification({ type: 'error', title: 'Error', message: err.message });
-      throw err;
-    }
-  }, [groupId, addNotification]);
-
-  const handleClosePoll = useCallback(async () => {
-    try {
-      await closePoll(groupId);
-      addNotification({ type: 'success', title: 'Poll Closed', message: 'Results are now final.' });
-    } catch (err) {
-      addNotification({ type: 'error', title: 'Error', message: err.message });
-    }
-  }, [groupId, addNotification]);
-
-  const handleDeletePoll = useCallback(async () => {
-    try {
-      await deletePoll(groupId);
-      setPoll(null);
-      addNotification({ type: 'success', title: 'Poll Removed', message: 'You can start a new vote.' });
-    } catch (err) {
-      addNotification({ type: 'error', title: 'Error', message: err.message });
-    }
-  }, [groupId, setPoll, addNotification]);
-
-  const handleAdminVote = useCallback(async ({ newCandidateIds }) => {
-    if (!adminParticipantId) return;
-    try {
-      await submitVote(groupId, adminParticipantId, newCandidateIds);
-    } catch (err) {
-      addNotification({ type: 'error', title: 'Vote Error', message: err.message });
-    }
-  }, [groupId, adminParticipantId, addNotification]);
-
-  const handleSendVoteInvites = useCallback(async () => {
-    try {
-      await apiCall('/api/send-vote-invite', {
-        method: 'POST',
-        body: JSON.stringify({
-          groupId,
-          adminToken,
-          groupName: group.name,
-          participants: participants.filter(p => p?.email).map(p => ({ email: p.email, id: p.id })),
-          baseUrl: window.location.origin,
-        }),
-      });
-      addNotification({ type: 'success', title: 'Invites Sent', message: 'Voting invites delivered.' });
-    } catch (err) {
-      addNotification({ type: 'error', title: 'Error', message: err.message });
-    }
-  }, [groupId, group, participants, addNotification]);
-
-  const handleSendVoteResult = useCallback(async () => {
-    try {
-      const votes = poll?.votes || {};
-      const candidates = poll?.candidates || {};
-      const voteCounts = Object.entries(candidates).map(([id, c]) => ({
-        ...c,
-        count: Object.values(votes).filter(v => v.candidateIds?.includes(id)).length,
-      }));
-      const winner = voteCounts.sort((a, b) => {
-        if (b.count !== a.count) return b.count - a.count;
-        return a.label - b.label; // Deterministic tie-breaker
-      })[0];
-
-      await apiCall('/api/send-vote-result', {
-        method: 'POST',
-        body: JSON.stringify({
-          groupId,
-          adminToken,
-          groupName: group.name,
-          winnerStartDate: winner?.startDate,
-          winnerEndDate: winner?.endDate,
-          participants: participants.filter(p => p?.email).map(p => ({ email: p.email })),
-          baseUrl: window.location.origin,
-        }),
-      });
-      addNotification({ type: 'success', title: 'Result Sent', message: 'Calendar invites delivered.' });
-    } catch (err) {
-      addNotification({ type: 'error', title: 'Error', message: err.message });
-    }
-  }, [groupId, group, participants, poll, addNotification]);
-
-  if (loading) {
-    return <LoadingSpinner label="Loading..." />;
-  }
+  if (loading) return <LoadingSpinner label="Loading..." />;
 
   if (error) {
     return (
@@ -274,9 +78,7 @@ function AdminPage({ onBack }) {
         <Card variant="danger" className="text-center max-w-md">
           <h2 className="text-xl font-bold text-rose-400 mb-2">Access Denied</h2>
           <p className="text-gray-300 mb-6 font-medium">{error}</p>
-          <Button variant="secondary" fullWidth onClick={onBack}>
-            Go Home
-          </Button>
+          <Button variant="secondary" fullWidth onClick={onBack}>Go Home</Button>
         </Card>
       </div>
     );
@@ -287,9 +89,7 @@ function AdminPage({ onBack }) {
       <div className="flex items-center justify-center min-h-screen">
         <Card variant="default" className="text-center max-w-md">
           <p className="text-rose-400 mb-6 font-medium">Group not found or could not be loaded.</p>
-          <Button variant="primary" fullWidth onClick={onBack}>
-            Go Home
-          </Button>
+          <Button variant="primary" fullWidth onClick={onBack}>Go Home</Button>
         </Card>
       </div>
     );
@@ -300,10 +100,7 @@ function AdminPage({ onBack }) {
       <SchemaMarkup group={group} content={{}} />
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-start mb-8">
-          <button
-            onClick={onBack}
-            className="text-brand-400 hover:text-brand-300 font-semibold"
-          >
+          <button onClick={onBack} className="text-brand-400 hover:text-brand-300 font-semibold">
             ← Back to Home
           </button>
           <h1 className="text-3xl font-bold text-gray-50 flex-1 text-center truncate">
@@ -315,141 +112,51 @@ function AdminPage({ onBack }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="md:col-span-2 md:row-span-2">
             <GroupSettings
-              group={group}
-              participants={participants}
-              editing={editing}
-              setEditing={setEditing}
-              editData={editData}
-              setEditData={setEditData}
-              onSaveEdit={handleSaveEdit}
-              onDelete={() => setShowDeleteConfirm(true)}
-              participantLink={participantLink}
-              adminLink={adminLink}
-              groupId={groupId}
-              copiedPLink={copiedPLink}
-              copyPLink={copyPLink}
-              copiedALink={copiedALink}
-              copyALink={copyALink}
-              copiedGroupId={copiedGroupId}
-              copyGroupId={copyGroupId}
-              showPassphrase={showPassphrase}
-              setShowPassphrase={setShowPassphrase}
+              group={group} participants={participants}
+              editing={editing} setEditing={setEditing}
+              editData={editData} setEditData={setEditData}
+              onSaveEdit={handleSaveEdit} onDelete={() => setShowDeleteConfirm(true)}
+              participantLink={participantLink} adminLink={adminLink} groupId={groupId}
+              copiedPLink={copiedPLink} copyPLink={copyPLink}
+              copiedALink={copiedALink} copyALink={copyALink}
+              copiedGroupId={copiedGroupId} copyGroupId={copyGroupId}
+              showPassphrase={showPassphrase} setShowPassphrase={setShowPassphrase}
             />
           </div>
-
-          <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 h-full">
-            <h3 className="font-semibold text-gray-300 mb-4">Actions</h3>
-            <div className="space-y-2">
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={handleExport}
-                disabled={!participants || participants.length === 0}
-              >
-                <Download size={16} className="inline mr-1.5" /> Export CSV
-              </Button>
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={() => setShowVotingSetup(true)}
-                disabled={!!poll || showVotingSetup || !overlaps?.length}
-                title={poll ? 'A poll is already active' : !overlaps?.length ? 'No overlap data yet' : ''}
-              >
-                <Vote size={16} className="inline mr-1.5" /> Start Vote
-              </Button>
-              <Button
-                variant="primary"
-                fullWidth
-                onClick={handleSendReminder}
-                disabled={reminderSending || !participants?.some(p => p?.email && p.email.trim() !== '')}
-                title={!participants?.some(p => p?.email && p.email.trim() !== '') ? 'No participants have an email address' : ''}
-              >
-                <Mail size={16} className="inline mr-1.5" />
-                {reminderSending ? 'Sending...' : 'Send Reminder'}
-              </Button>
-              <Button
-                variant="danger"
-                fullWidth
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                Delete Group
-              </Button>
-            </div>
-          </div>
-
-          <div className="bg-dark-900 rounded-xl border border-dark-700 p-6 h-full">
-            <h3 className="font-semibold text-gray-300 mb-4">Statistics</h3>
-            <div className="space-y-2 text-sm text-gray-300">
-              <p>Total participants: <span className="font-bold">{participants?.length || 0}</span></p>
-              <p>Possible periods: <span className="font-bold">{overlaps?.length || 0}</span></p>
-              {overlaps?.length > 0 && (
-                <p>Best match: <span className="font-bold">{overlaps[0].availabilityPercent}%</span></p>
-              )}
-            </div>
-          </div>
+          <ActionsCard
+            participants={participants} overlaps={overlaps}
+            poll={poll} showVotingSetup={showVotingSetup} reminderSending={reminderSending}
+            onExport={handleExport} onStartVote={() => setShowVotingSetup(true)}
+            onSendReminder={handleSendReminder} onDeleteGroup={() => setShowDeleteConfirm(true)}
+          />
+          <StatisticsCard participants={participants} overlaps={overlaps} />
         </div>
 
-        <ParticipantTable
-          participants={participants}
-          actions={participantActions}
+        <ParticipantTable participants={participants} actions={participantActions} />
+
+        <VotingSection
+          heatmapRef={heatmapRef} showVotingSetup={showVotingSetup} poll={poll}
+          group={group} participants={participants} overlaps={overlaps}
+          durationFilter={durationFilter} setDurationFilter={setDurationFilter}
+          adminParticipantId={adminParticipantId}
+          onStartPoll={handleStartPoll} onCancelSetup={() => setShowVotingSetup(false)}
+          onClosePoll={handleClosePoll} onDeletePoll={handleDeletePoll}
+          onVote={handleAdminVote} onSendInvites={handleSendVoteInvites}
+          onSendResult={handleSendVoteResult}
         />
 
-        {showVotingSetup && !poll ? (
-          <VotingSetup
-            group={group}
-            participants={participants}
-            overlaps={overlaps}
-            durationFilter={durationFilter}
-            onDurationChange={setDurationFilter}
-            onStartPoll={handleStartPoll}
-            onCancel={() => setShowVotingSetup(false)}
-          />
-        ) : poll ? (
-          <div ref={heatmapRef}>
-            <VotingResults
-              group={group}
-              participants={participants}
-              overlaps={overlaps}
-              durationFilter={durationFilter}
-              onDurationChange={setDurationFilter}
-              poll={poll}
-              adminParticipantId={adminParticipantId}
-              onClosePoll={handleClosePoll}
-              onDeletePoll={handleDeletePoll}
-              onVote={handleAdminVote}
-              onSendInvites={handleSendVoteInvites}
-              onSendResult={handleSendVoteResult}
-            />
-          </div>
-        ) : (
-          <OverlapResults
-            group={group}
-            participants={participants}
-            overlaps={overlaps}
-            durationFilter={durationFilter}
-            onDurationChange={setDurationFilter}
-          />
-        )}
-
         <AdminAvailability
-          group={group}
-          adminParticipantId={adminParticipantId}
-          adminSavedDays={adminSavedDays}
-          adminName={adminName}
-          adminEmail={adminEmail}
-          adminDuration={adminDuration}
+          group={group} adminParticipantId={adminParticipantId}
+          adminSavedDays={adminSavedDays} adminName={adminName}
+          adminEmail={adminEmail} adminDuration={adminDuration}
           onSave={handleAdminAvailability}
         />
 
         <ConfirmDialog
-          open={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={handleDelete}
-          title="Delete Group"
+          open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={handleDelete} title="Delete Group"
           message="Are you sure? This will delete the entire group and all data. This action cannot be undone."
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          variant="danger"
+          confirmLabel="Delete" cancelLabel="Cancel" variant="danger"
         />
       </div>
     </div>

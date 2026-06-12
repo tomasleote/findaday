@@ -3,24 +3,10 @@
 // Required env vars: EMAIL_USER, EMAIL_PASSWORD, REACT_APP_FIREBASE_DATABASE_URL
 
 const nodemailer = require('nodemailer');
-const crypto = require('crypto');
+const { hashPhrase, timingSafeEqual } = require('./_lib/auth');
+const { generateICS } = require('./_lib/ics');
 
 const DB_URL = process.env.REACT_APP_FIREBASE_DATABASE_URL;
-
-function hashPhrase(text) {
-  if (!text) return '';
-  return crypto.createHash('sha256').update(text).digest('hex');
-}
-
-function timingSafeEqual(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string') return false;
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return result === 0;
-}
 
 async function getGroup(groupId) {
   if (!DB_URL || !groupId) return null;
@@ -33,38 +19,6 @@ async function getGroup(groupId) {
     console.error('[send-vote-result] Failed to fetch group:', err.message);
     return null;
   }
-}
-
-function formatICSDate(dateStr) {
-  // dateStr is YYYY-MM-DD; convert to YYYYMMDD for ICS all-day format
-  return dateStr.replace(/-/g, '');
-}
-
-function generateICS({ title, startDate, endDate, description }) {
-  // endDate in ICS all-day events is exclusive (day after last day)
-  const end = new Date(endDate);
-  end.setDate(end.getDate() + 1);
-  const endStr = end.toISOString().split('T')[0].replace(/-/g, '');
-  const startStr = formatICSDate(startDate);
-  const uid = `${Date.now()}@findaday`;
-  const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-  return [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Find A Day//EN',
-    'CALSCALE:GREGORIAN',
-    'METHOD:REQUEST',
-    'BEGIN:VEVENT',
-    `UID:${uid}`,
-    `DTSTAMP:${now}`,
-    `DTSTART;VALUE=DATE:${startStr}`,
-    `DTEND;VALUE=DATE:${endStr}`,
-    `SUMMARY:${title}`,
-    `DESCRIPTION:${description}`,
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].join('\r\n');
 }
 
 function formatDate(d) {

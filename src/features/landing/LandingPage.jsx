@@ -1,13 +1,16 @@
 import React, { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { CalendarRange, Sparkles, MessageCircle, Share2, CheckCircle2, ChevronDown, ArrowRight, Palmtree, Utensils, Users, Gamepad2, Plane, Tv, CalendarDays, Zap, Clock, ThumbsUp, Gift, Sun, HeartHandshake } from 'lucide-react';
+import { CalendarRange, Sparkles, Share2, CheckCircle2, ArrowRight, Palmtree, Utensils, Users, Gamepad2, Plane, Tv, CalendarDays, Zap, Clock, ThumbsUp, Gift, Sun, HeartHandshake } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { landingPagesConfig } from './landingPageContent';
+import { landingPagesConfig } from './content';
 import ComparisonTable from './ComparisonTable';
 import RelatedPages from './RelatedPages';
 import SchemaMarkup from './SchemaMarkup';
 import { Header } from '../../shared/ui';
+import { HeroSection } from './sections/HeroSection';
+import { ProblemSection } from './sections/ProblemSection';
+import { FAQSection } from './sections/FAQSection';
 
 // Map textual emoji/icon keys to actual Lucide components to ensure NO EMOJIS are used
 const ICON_MAP = {
@@ -60,113 +63,12 @@ export default function LandingPage({ type }) {
             {/* Nav */}
             <Header />
 
-            {/* Hero */}
             <main className="flex-1 w-full flex flex-col items-center">
-                <section className="w-full max-w-4xl mx-auto px-6 pt-16 md:pt-24 pb-20 text-center relative">
-                    {/* Decorative background blobs */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-500/10 blur-[100px] rounded-full pointer-events-none" />
+                <HeroSection content={content} PageIcon={PageIcon} />
 
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.5, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                        className="w-16 h-16 bg-brand-500/20 text-brand-400 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner shadow-brand-300/10"
-                    >
-                        <PageIcon size={32} />
-                    </motion.div>
+                <ProblemSection content={content} />
 
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1, duration: 0.5 }}
-                        className="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight"
-                    >
-                        {content.h1}
-                    </motion.h1>
-
-                    <motion.p
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.5 }}
-                        className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed"
-                    >
-                        {content.subtitle}
-                    </motion.p>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.5 }}
-                        className="flex flex-col sm:flex-row items-center justify-center gap-4"
-                    >
-                        <Link to="/" className="w-full sm:w-auto px-8 py-4 rounded-full bg-brand-500 text-white text-lg font-bold shadow-xl shadow-brand-500/20 hover:-translate-y-1 hover:shadow-brand-500/40 active:translate-y-0 transition-all flex items-center justify-center gap-2 group">
-                            {content.ctaText || 'Create an Event — Free'}
-                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                    </motion.div>
-                    <motion.p
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
-                        className="mt-4 text-sm text-gray-500 font-medium"
-                    >
-                        No sign-up required. Free forever.
-                    </motion.p>
-                </section>
-
-                {/* Problem Section & Context */}
-                <section className="w-full bg-dark-900 py-20 border-y border-dark-800">
-                    <div className="max-w-3xl mx-auto px-6">
-                        <div className="space-y-16">
-                            <div className="space-y-6">
-                                {content.problemSection.map((p, i) => (
-                                    <motion.p
-                                        key={i}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        whileInView={{ opacity: 1, x: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: i * 0.1 }}
-                                        className={`text-lg leading-relaxed ${i === 0 ? 'text-gray-200 font-medium text-xl border-l-4 border-brand-500 pl-6 py-2' : 'text-gray-400'}`}
-                                    >
-                                        {p}
-                                    </motion.p>
-                                ))}
-                            </div>
-
-                            {content.whyToolsFail && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    className="bg-dark-800/50 p-8 rounded-2xl border border-dark-700"
-                                >
-                                    <h3 className="text-2xl font-bold text-white mb-4">Why Existing Tools Fail</h3>
-                                    <p className="text-lg text-gray-400 leading-relaxed">{content.whyToolsFail}</p>
-                                </motion.div>
-                            )}
-
-                            {content.useCases && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <h3 className="text-2xl font-bold text-white mb-6">Use Case Scenarios</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {content.useCases.map((uc, i) => (
-                                            <div key={i} className="bg-dark-950 p-6 rounded-xl border border-dark-800 hover:border-dark-700 transition-colors">
-                                                <strong className="block text-brand-400 text-lg mb-2">{uc.title}</strong>
-                                                <span className="text-gray-400 leading-relaxed">{uc.description}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </div>
-                    </div>
-                </section>
-
-                {/* How It Works (Playful Style) */}
+                {/* How It Works */}
                 <section className="w-full max-w-6xl mx-auto px-6 py-24">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">How it works</h2>
@@ -210,15 +112,7 @@ export default function LandingPage({ type }) {
                     </section>
                 )}
 
-                {/* FAQs */}
-                <section className="w-full max-w-3xl mx-auto px-6 py-24">
-                    <h2 className="text-3xl font-bold text-white mb-10 text-center">Frequently Asked Questions</h2>
-                    <div className="space-y-4">
-                        {content.faqs.map((faq, i) => (
-                            <FAQItem key={i} question={faq.question} answer={faq.answer} />
-                        ))}
-                    </div>
-                </section>
+                <FAQSection faqs={content.faqs} />
 
                 {/* Bottom CTA */}
                 <section className="w-full py-24 relative overflow-hidden flex items-center justify-center text-center px-6">
@@ -238,36 +132,6 @@ export default function LandingPage({ type }) {
                     <RelatedPages currentType={type} relatedSlugs={content.relatedPages} />
                 </section>
             </main>
-        </div>
-    );
-}
-
-function FAQItem({ question, answer }) {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const id = React.useId();
-    return (
-        <div className="bg-dark-900 border border-dark-800 rounded-2xl overflow-hidden hover:border-dark-700 transition-colors">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full px-6 py-5 text-left flex justify-between items-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 rounded-xl"
-                aria-expanded={isOpen}
-                aria-controls={`faq-answer-${id}`}
-            >
-                <span className="font-bold text-gray-200 text-lg">{question}</span>
-                <ChevronDown className={`text-brand-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} size={20} />
-            </button>
-            <motion.div
-                id={`faq-answer-${id}`}
-                role="region"
-                aria-hidden={!isOpen}
-                initial={false}
-                animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
-                className="overflow-hidden bg-dark-800/50"
-            >
-                <p className="p-6 pt-2 text-gray-400 leading-relaxed font-medium text-sm md:text-base">
-                    {answer}
-                </p>
-            </motion.div>
         </div>
     );
 }

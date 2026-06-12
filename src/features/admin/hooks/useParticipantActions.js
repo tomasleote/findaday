@@ -3,6 +3,7 @@ import { addParticipant, updateParticipant, deleteParticipant } from '../../../s
 import { validateParticipantName, validateEmail, sanitizeName, sanitizeEmail, generateParticipantLink } from '../../../utils/participantValidation';
 import { apiCall } from '../../../services/apiService';
 import { useNotification } from '../../../context/NotificationContext';
+import { isOfflineError } from './participantActionHelpers';
 
 export function useParticipantActions(groupId, group, participants, setParticipants) {
   const { addNotification } = useNotification();
@@ -66,13 +67,7 @@ export function useParticipantActions(groupId, group, participants, setParticipa
       // Revert optimistic participant from list, but KEEP form inputs so user can retry
       setParticipants(prev => prev.filter(p => p.id !== tempId));
 
-      const isOffline =
-        (typeof window !== 'undefined' && !window.navigator.onLine) ||
-        err.name === 'TypeError' ||
-        err.name === 'NetworkError' ||
-        (err.message && (err.message.includes('failed to fetch') || err.message.includes('network') || err.message === 'Failed to fetch'));
-
-      if (isOffline) {
+      if (isOfflineError(err)) {
         addNotification({ type: 'error', title: 'Create Failed', message: 'You appear to be offline. Check your network connection and try again.' });
       } else {
         addNotification({ type: 'error', title: 'Create Failed', message: err.message });

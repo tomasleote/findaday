@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { landingPagesConfig } from './landingPageContent';
+import { landingPagesConfig } from './content';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 
 export default function RelatedPages({ currentType, relatedSlugs }) {
