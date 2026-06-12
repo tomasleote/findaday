@@ -1,8 +1,8 @@
-# API Documentation 🚀
+# API Documentation
 
-Internal services and data models for **Find A Day**.
+Internal services and data models for Find A Day.
 
-## 🏗️ Core Services
+## Core Services
 
 ### Group Service (`src/services/groupService.js`)
 
@@ -59,7 +59,7 @@ const participantId = await addParticipant(groupId, {
 
 ---
 
-## 📊 Data Models
+## Data Models
 
 ### Group
 ```typescript
@@ -98,7 +98,7 @@ interface Participant {
 
 ---
 
-## 🌩️ Serverless API (`/api`)
+## Serverless API (`/api`)
 
 These routes handle sensitive operations like emailing and recovery.
 
@@ -112,9 +112,9 @@ These routes handle sensitive operations like emailing and recovery.
 
 ---
 
-## 🧮 Calculation Logic (`src/utils/overlap.js`)
+## Calculation Logic (`src/utils/overlap.js`)
 
-The core algorithm finds the best overlapping window by:
+The overlap algorithm finds the best window by:
 1. Identifying all unique start dates within the group window.
 2. For each date, checking how many participants have a contiguous block of availability starting there.
 3. Ranking results by the highest number of available participants.

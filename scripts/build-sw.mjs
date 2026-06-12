@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const buildSW = async () => {
-    console.log('👷 Injecting precache manifest into Service Worker...');
+    console.log('Injecting precache manifest into Service Worker...');
 
     try {
         const { count, size } = await injectManifest({
@@ -20,9 +20,9 @@ const buildSW = async () => {
             globIgnores: ['service-worker.js'],
         });
 
-        console.log(`✨ Service worker generated with ${count} precached assets (${Math.round(size / 1024)} KB)`);
+        console.log(`Service worker generated with ${count} precached assets (${Math.round(size / 1024)} KB)`);
     } catch (error) {
-        console.error('❌ Failed to inject manifest:', error);
+        console.error('Failed to inject manifest:', error);
         process.exit(1);
     }
 };

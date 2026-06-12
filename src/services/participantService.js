@@ -23,6 +23,7 @@ export const addParticipant = async (groupId, participantData) => {
     }
     const existing = Object.values(currentParticipants);
     if (existing.some(p => p.name && p.name.trim().toLowerCase() === normalizedNew)) {
+      // Returning undefined aborts the Firebase transaction (name taken)
       return;
     }
 
@@ -63,6 +64,7 @@ export const updateParticipant = async (groupId, participantId, updates) => {
       if (!currentParticipants) return currentParticipants;
       const existing = Object.values(currentParticipants);
       if (existing.some(p => p.name && p.name.trim().toLowerCase() === normalizedNew && p.id !== participantId)) {
+        // Returning undefined aborts the Firebase transaction (name taken)
         return;
       }
       if (currentParticipants[participantId]) {

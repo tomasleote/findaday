@@ -105,7 +105,9 @@ function ParticipantView({ participantId: initialParticipantId, onBack }) {
       (pollData) => {
         setPoll(pollData);
 
-        // Auto-close: if all participants have voted, close the poll
+        // Auto-close: if all participants have voted, close the poll.
+        // Read the count from a ref — this callback is created once on
+        // subscribe, so reading the state variable would give a stale value.
         if (pollData?.status === 'active' && participantsRef.current > 0) {
           const voterCount = Object.keys(pollData.votes || {}).length;
           if (voterCount >= participantsRef.current) {

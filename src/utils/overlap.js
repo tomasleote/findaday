@@ -52,6 +52,8 @@ export const calculateOverlap = (participants, startDate, endDate, durationDays)
       if (pSet.has(dayLeaving)) windowCounts[pIdx]--;
       if (pSet.has(dayEntering)) windowCounts[pIdx]++;
 
+      // windowCounts tracks how many days of the current window this
+      // participant has available; equal to durationDays means all of them
       if (windowCounts[pIdx] === durationDays) {
         availableCount++;
       }

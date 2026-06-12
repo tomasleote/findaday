@@ -154,6 +154,8 @@ const SlidingOverlapCalendar = forwardRef(function SlidingOverlapCalendar({ star
         return dateRange.slice(startIndex, startIndex + parseInt(duration));
     };
 
+    // Selection takes precedence over hover: once a candidate is picked,
+    // hovering others doesn't change the highlighted block
     const activeCandidateId = votingMode?.active
         ? (selectedCandidateId || hoveredCandidateId)
         : null;

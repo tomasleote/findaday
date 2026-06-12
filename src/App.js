@@ -31,7 +31,8 @@ function RootHandler() {
   const [currentPage, setCurrentPage] = useState('home');
 
   useEffect(() => {
-    // One-time migration from old localStorage keys
+    // One-time migration from pre-rebrand localStorage keys (vacation_* -> fad_*).
+    // Safe to delete once old links are no longer in circulation.
     try {
       const isMigrationComplete = localStorage.getItem('fad_migration_v1_complete');
       if (!isMigrationComplete) {

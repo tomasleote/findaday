@@ -1,114 +1,103 @@
-# Find A Day 📅
+# Find A Day
 
-**Find A Day** is a zero-friction, privacy-first web application designed to eliminate the headache of scheduling group events—from week-long vacations to single-day dinners. 
+Find A Day is a web app for scheduling group events, anything from a week-long vacation to a single dinner. Participants mark their availability on a calendar, and an overlap heatmap shows which dates work for the most people. No accounts or sign-ups required; groups are created and shared via links.
 
-Unlike Doodle or When2Meet, **Find A Day** is built specifically for **date ranges**, features a modern mobile-first UI, and requires **no account or sign-up** for organizers or participants.
+Compared to tools like Doodle or When2Meet, it is built around date ranges rather than time slots, which fits multi-day planning better.
 
 ![Find A Day Homepage](screenshots/homepage.png)
 
-## ✨ Why Find A Day?
+## Features
 
-*   🚀 **Zero Friction**: No accounts, no sign-ups, no ads. Create a poll and share a link in under 30 seconds.
-*   📊 **Visual Heatmaps**: Instantly see which dates work for the most people with an intuitive, color-coded availability grid.
-*   🗳️ **Democratic Voting**: Admin proposes top candidate dates, participants vote with live results. The option with the most votes wins—transparent and fair.
-*   📍 **Location Smart**: Integrated with Google Places. Add a restaurant, park, or city with autocomplete to help everyone plan better.
-*   🗓️ **Built for Ranges**: Perfect for vacations and retreats. Participants paint their availability on a custom calendar, not a messy list of time slots.
-*   📱 **Mobile-First**: Designed to work perfectly in your group chat. Every feature is optimized for the phone in your hand.
-*   🔐 **Secure Admin**: Manage your group via a unique admin link. Recover access anytime using a secure passphrase or email.
-*   📅 **Calendar Invites**: Admin can send the winning date as a calendar invite (ICS file) to all participants—one-click import into any calendar app.
+- No accounts. Create a group and share a link; participants join through the link.
+- Availability heatmap: a color-coded calendar grid showing how many people are free on each date.
+- Voting: the admin proposes candidate dates, participants vote, results update live.
+- Location field with Google Places autocomplete.
+- Range-based input: participants select date ranges on a calendar instead of picking time slots.
+- Admin access via a private admin link, recoverable by passphrase or email.
+- Calendar invites: the admin can send the winning date as an ICS file to all participants.
 
 ![Availability Heatmap](screenshots/findADay-availabilityHeatmap.png)
 
-## 🛠️ Technology Stack
+## Tech Stack
 
-*   **Frontend**: React 18, Tailwind CSS, Framer Motion (Animations), Lucide Icons.
-*   **Database**: Firebase Realtime Database (Real-time updates without page refreshes).
-*   **APIs**: 
-    *   **Google Places (New) API**: For location autocomplete and address formatting.
-    *   **Vercel Serverless Functions**: For secure backend operations (Express-like `/api` routes).
-*   **Email**: Nodemailer (via Vercel functions for invites and recovery).
-*   **SEO**: React Helmet Async for dynamic metadata and social previews.
+- **Frontend**: React 18, Tailwind CSS, Framer Motion, Lucide icons
+- **Database**: Firebase Realtime Database (live updates over websockets)
+- **Backend**: Vercel serverless functions (`/api` routes) for email and admin operations
+- **Email**: Nodemailer over Gmail SMTP
+- **SEO**: React Helmet Async for per-route metadata, plus a static prerender step at build time
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-*   Node.js 18.x or higher
-*   A Firebase project (Realtime Database enabled)
-*   Google Cloud Project (with Places API enabled)
-*   Gmail account with App Password (for email features)
+- Node.js 18 or higher
+- A Firebase project with Realtime Database enabled
+- A Google Cloud project with the Places API enabled
+- A Gmail account with an App Password (only needed for email features)
 
 ### Local Installation
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/tomasleote/vacation-scheduler.git
-    cd vacation-scheduler
-    ```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/tomasleote/vacation-scheduler.git
+   cd vacation-scheduler
+   ```
 
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-3.  **Environment Setup**:
-    Create a `.env.local` file in the root directory:
-    ```env
-    # Firebase Configuration
-    REACT_APP_FIREBASE_API_KEY="your_api_key"
-    REACT_APP_FIREBASE_AUTH_DOMAIN="your_app.firebaseapp.com"
-    REACT_APP_FIREBASE_DATABASE_URL="https://your_app-default-rtdb.firebaseio.com"
-    REACT_APP_FIREBASE_PROJECT_ID="your_project_id"
-    REACT_APP_FIREBASE_STORAGE_BUCKET="your_app.appspot.com"
-    REACT_APP_FIREBASE_MESSAGING_SENDER_ID="your_sender_id"
-    REACT_APP_FIREBASE_APP_ID="your_app_id"
+3. Create a `.env.local` file in the root directory:
+   ```env
+   # Firebase
+   REACT_APP_FIREBASE_API_KEY="your_api_key"
+   REACT_APP_FIREBASE_AUTH_DOMAIN="your_app.firebaseapp.com"
+   REACT_APP_FIREBASE_DATABASE_URL="https://your_app-default-rtdb.firebaseio.com"
+   REACT_APP_FIREBASE_PROJECT_ID="your_project_id"
+   REACT_APP_FIREBASE_STORAGE_BUCKET="your_app.appspot.com"
+   REACT_APP_FIREBASE_MESSAGING_SENDER_ID="your_sender_id"
+   REACT_APP_FIREBASE_APP_ID="your_app_id"
 
-    # Google Places
-    REACT_APP_GOOGLE_PLACES_API_KEY="your_google_maps_key"
+   # Google Places
+   REACT_APP_GOOGLE_PLACES_API_KEY="your_google_maps_key"
 
-    # Email (for serverless functions)
-    EMAIL_SERVICE="gmail"
-    EMAIL_USER="your-email@gmail.com"
-    EMAIL_PASSWORD="your-app-password"
-    ```
+   # Email (used by the serverless functions)
+   EMAIL_SERVICE="gmail"
+   EMAIL_USER="your-email@gmail.com"
+   EMAIL_PASSWORD="your-app-password"
+   ```
 
-4.  **Start development server**:
-    ```bash
-    npm start
-    ```
-    The app will run at `http://localhost:3000`.
+4. Start the development server:
+   ```bash
+   npm start
+   ```
+   The app runs at `http://localhost:3000`.
 
-## 🚢 Deployment
+## Deployment
 
-The project is optimized for **Vercel** with zero-config serverless function support.
+The project deploys to Vercel, which picks up the `/api` serverless functions without extra configuration:
 
-1.  Push your code to GitHub.
-2.  Connect your repository to Vercel.
-3.  Add the environment variables in the Vercel Dashboard.
-4.  Deploy!
+1. Push the code to GitHub.
+2. Connect the repository to Vercel.
+3. Add the environment variables in the Vercel dashboard.
+4. Deploy.
 
-## 🧪 Testing
+## Testing
 
-The codebase includes integration and unit tests using Jest and React Testing Library.
+Unit and integration tests use Jest and React Testing Library:
 
 ```bash
 npm test
 ```
 
-## 📄 License
+## License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+MIT, see the [LICENSE](LICENSE) file.
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-*Made with ❤️ for better group planning.*
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes
+4. Push the branch and open a pull request
